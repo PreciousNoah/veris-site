@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowLeft, Globe, Github, Bot, Wallet, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { ArrowLeft, Globe, Github, Bot, Wallet, XCircle } from "lucide-react";
 import "@/veris.css";
 
 const BACKEND_URL = "https://veris-agent.onrender.com";
@@ -42,6 +42,7 @@ type AuditResult = {
   riskLevel?: string;
   dimensions?: { label: string; score: number; max: number }[];
   badge?: { background: string; border: string; color: string };
+  rawReport?: string;
   [key: string]: unknown;
 };
 
@@ -62,19 +63,68 @@ export default function AuditPage() {
     setResult(null);
 
     try {
+      // 1. Make the request
       const res = await fetch(`${BACKEND_URL}/audit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target: target.trim(), entityType, depth }),
+        body: JSON.stringify({
+          requirements: {
+            type:      entityType === "agent" ? "agent" : "project",
+            name:      target.trim(),
+            website:   entityType === "project" ? target.trim() : undefined,
+            agentId:   entityType === "agent"   ? target.trim() : undefined,
+            serviceId: entityType === "agent"   ? target.trim() : undefined,
+            mode:      depth === "deep" ? "full" : "quick",
+            category:  "general",
+          },
+        }),
       });
 
+      // 2. Check for HTTP errors
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new Error(body || `Server returned ${res.status}`);
       }
 
-      const data: AuditResult = await res.json();
-      setResult(data);
+      // 3. Parse the response
+      const data = await res.json();
+      const report: string = data.report || "";
+
+      const scoreMatch = report.match(/OVERALL TRUST SCORE:\s*(\d+)\/(\d+)/);
+      const riskMatch  = report.match(/RISK LEVEL:\s*(\w+)/);
+      const recMatch   = report.match(/RECOMMENDATION\n([^\n]+)/);
+
+      const dimensions: { label: string; score: number; max: number }[] = [];
+      const dimRegex = /([\w\s]+):\s+(\d+)\/(\d+)\s+[█░]+/g;
+      let dimMatch;
+      while ((dimMatch = dimRegex.exec(report)) !== null) {
+        dimensions.push({
+          label: dimMatch[1].trim(),
+          score: parseInt(dimMatch[2]),
+          max:   parseInt(dimMatch[3]),
+        });
+      }
+
+      const trustScore = scoreMatch ? parseInt(scoreMatch[1]) : undefined;
+      const riskLevel  = riskMatch  ? riskMatch[1].toUpperCase() : undefined;
+
+      const badge =
+        trustScore !== undefined && trustScore >= 75
+          ? { background: "rgba(16,185,129,0.1)",  border: "1px solid rgba(16,185,129,0.3)",  color: "#10B981" }
+          : trustScore !== undefined && trustScore >= 50
+          ? { background: "rgba(251,185,45,0.1)",  border: "1px solid rgba(251,185,45,0.3)",  color: "#FBB92D" }
+          : { background: "rgba(239,68,68,0.1)",   border: "1px solid rgba(239,68,68,0.3)",   color: "#EF4444" };
+
+      setResult({
+        trustScore,
+        maxScore:       scoreMatch ? parseInt(scoreMatch[2]) : 100,
+        riskLevel,
+        recommendation: recMatch ? recMatch[1].trim() : riskLevel,
+        dimensions,
+        badge,
+        rawReport:      report,
+      });
+
       setPageState("done");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -92,8 +142,8 @@ export default function AuditPage() {
 
   const badgeColor = (risk?: string) => {
     if (!risk) return "#8B96A7";
-    if (risk === "LOW")    return "#10B981";
-    if (risk === "HIGH")   return "#EF4444";
+    if (risk === "LOW")  return "#10B981";
+    if (risk === "HIGH") return "#EF4444";
     return "#FBB92D";
   };
 
@@ -140,8 +190,8 @@ export default function AuditPage() {
 
           <AnimatePresence mode="wait">
 
-            {/* ── FORM ── */}
-            {pageState === "idle" || pageState === "error" ? (
+            {/* FORM */}
+            {(pageState === "idle" || pageState === "error") && (
               <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div style={{
                   background: "rgba(17,20,26,0.8)", border: "1px solid rgba(255,255,255,0.08)",
@@ -259,9 +309,9 @@ export default function AuditPage() {
                   </div>
                 </div>
               </motion.div>
-            ) : null}
+            )}
 
-            {/* ── LOADING ── */}
+            {/* LOADING */}
             {pageState === "loading" && (
               <motion.div
                 key="loading"
@@ -295,12 +345,12 @@ export default function AuditPage() {
                   Verifying <strong style={{ color: "#00D4FF" }}>{target}</strong>
                 </p>
                 <p style={{ color: "#8B96A7", fontSize: 13, margin: 0 }}>
-                  Scanning trust signals across {DEPTHS.find(d => d.id === depth)?.desc.toLowerCase()}…
+                  Scanning trust signals — {DEPTHS.find(d => d.id === depth)?.desc.toLowerCase()}…
                 </p>
               </motion.div>
             )}
 
-            {/* ── RESULT ── */}
+            {/* RESULT */}
             {pageState === "done" && result && (
               <motion.div
                 key="done"
@@ -378,8 +428,25 @@ export default function AuditPage() {
                     </div>
                   )}
 
-                  {/* raw JSON fallback if no dimensions */}
-                  {(!Array.isArray(result.dimensions) || result.dimensions.length === 0) && (
+                  {/* raw report */}
+                  {result.rawReport && (
+                    <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
+                        Full Report
+                      </div>
+                      <pre style={{
+                        background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 16,
+                        fontSize: 11, color: "#8B96A7", overflowX: "auto",
+                        fontFamily: "monospace", margin: 0, lineHeight: 1.7,
+                        whiteSpace: "pre-wrap", wordBreak: "break-word"
+                      }}>
+                        {result.rawReport}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* fallback if nothing parsed */}
+                  {!result.rawReport && (!Array.isArray(result.dimensions) || result.dimensions.length === 0) && (
                     <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                       <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
                         Raw Result
