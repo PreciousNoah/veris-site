@@ -1,26 +1,31 @@
-got into an error and made some changes ,can you help me just structure this properly"import { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowLeft, Globe, Github, Bot, Wallet, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { ArrowLeft, Globe, Github, Bot, Wallet, XCircle } from "lucide-react";
 import "@/veris.css";
+
 const BACKEND_URL = "https://veris-agent.onrender.com";
+
 const ENTITY_TYPES = [
   { id: "project", label: "Web3 / DeFi Project", Icon: Globe },
   { id: "agent",   label: "AI Agent",             Icon: Bot },
   { id: "github",  label: "GitHub Repository",    Icon: Github },
   { id: "wallet",  label: "Wallet Address",       Icon: Wallet },
 ];
+
 const DEPTHS = [
   { id: "standard", label: "Standard",  desc: "Core trust signals — ~60 seconds" },
   { id: "deep",     label: "Deep Dive", desc: "Full evidence scan — ~3 minutes"  },
   { id: "realtime", label: "Real-Time", desc: "Live monitoring + instant report" },
 ];
+
 const placeholders: Record<string, string> = {
   project: "https://yourproject.xyz",
   agent:   "agent-xyz-001 or a DID identifier",
   github:  "https://github.com/org/repo",
   wallet:  "0x… or a Solana address",
 };
+
 function VerisMark() {
   return (
     <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
@@ -29,6 +34,7 @@ function VerisMark() {
     </svg>
   );
 }
+
 type AuditResult = {
   trustScore?: number;
   maxScore?: number;
@@ -39,7 +45,9 @@ type AuditResult = {
   rawReport?: string;
   [key: string]: unknown;
 };
+
 type PageState = "idle" | "loading" | "done" | "error";
+
 export default function AuditPage() {
   const [entityType, setEntityType] = useState("project");
   const [depth, setDepth]           = useState("standard");
@@ -47,77 +55,76 @@ export default function AuditPage() {
   const [pageState, setPageState]   = useState<PageState>("idle");
   const [result, setResult]         = useState<AuditResult | null>(null);
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
+
   const handleSubmit = async () => {
     if (!target.trim() || pageState === "loading") return;
     setPageState("loading");
     setErrorMsg(null);
     setResult(null);
+
     try {
+      // 1. Make the request
       const res = await fetch(`${BACKEND_URL}/audit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-       requirements: {
-       type: entityType === "agent" ? "agent" : "project",
-      name: target.trim(),
-      website: entityType === "project" ? target.trim() : undefined,
-      agentId: entityType === "agent" ? target.trim() : undefined,
-      serviceId: entityType === "agent" ? target.trim() : undefined,
-      mode: depth === "deep" ? "full" : "quick",
-      category: "general",
-  }
-}),
+          requirements: {
+            type:      entityType === "agent" ? "agent" : "project",
+            name:      target.trim(),
+            website:   entityType === "project" ? target.trim() : undefined,
+            agentId:   entityType === "agent"   ? target.trim() : undefined,
+            serviceId: entityType === "agent"   ? target.trim() : undefined,
+            mode:      depth === "deep" ? "full" : "quick",
+            category:  "general",
+          },
+        }),
+      });
+
+      // 2. Check for HTTP errors
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new Error(body || `Server returned ${res.status}`);
       }
+
+      // 3. Parse the response
       const data = await res.json();
-const report: string = data.report || "";
-// Parse the text report into structured data
-const scoreMatch = report.match(/OVERALL TRUST SCORE:\s*(\d+)\/(\d+)/);
-const riskMatch = report.match(/RISK LEVEL:\s*(\w+)/);
-const recMatch = report.match(/RECOMMENDATION\n([^\n]+)/);
-const dimensions: { label: string; score: number; max: number }[] = [];
-const dimRegex = /([\w\s]+):\s+(\d+)\/(\d+)\s+[█░]+/g;
-let dimMatch;
-while ((dimMatch = dimRegex.exec(report)) !== null) {
-  dimensions.push({
-    label: dimMatch[1].trim(),
-    score: parseInt(dimMatch[2]),
-    max: parseInt(dimMatch[3]),
-  });
-}
-{result.rawReport && (
-  <div style={{ padding: "28px 32px" }}>
-    <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
-      Full Report
-    </div>
-    <pre style={{
-      background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 16,
-      fontSize: 11, color: "#8B96A7", overflowX: "auto",
-      fontFamily: "monospace", margin: 0, lineHeight: 1.7,
-      whiteSpace: "pre-wrap", wordBreak: "break-word"
-    }}>
-      {result.rawReport}
-    </pre>
-  </div>
-)}
-const trustScore = scoreMatch ? parseInt(scoreMatch[1]) : undefined;
-const riskLevel = riskMatch ? riskMatch[1].toUpperCase() : undefined;
-const badge = trustScore && trustScore >= 75
-  ? { background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: "#10B981" }
-  : trustScore && trustScore >= 50
-  ? { background: "rgba(251,185,45,0.1)", border: "1px solid rgba(251,185,45,0.3)", color: "#FBB92D" }
-  : { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#EF4444" };
-setResult({
-  trustScore,
-  maxScore: scoreMatch ? parseInt(scoreMatch[2]) : 100,
-  riskLevel,
-  recommendation: recMatch ? recMatch[1].trim() : riskLevel,
-  dimensions,
-  badge,
-  rawReport: report,
-});
+      const report: string = data.report || "";
+
+      const scoreMatch = report.match(/OVERALL TRUST SCORE:\s*(\d+)\/(\d+)/);
+      const riskMatch  = report.match(/RISK LEVEL:\s*(\w+)/);
+      const recMatch   = report.match(/RECOMMENDATION\n([^\n]+)/);
+
+      const dimensions: { label: string; score: number; max: number }[] = [];
+      const dimRegex = /([\w\s]+):\s+(\d+)\/(\d+)\s+[█░]+/g;
+      let dimMatch;
+      while ((dimMatch = dimRegex.exec(report)) !== null) {
+        dimensions.push({
+          label: dimMatch[1].trim(),
+          score: parseInt(dimMatch[2]),
+          max:   parseInt(dimMatch[3]),
+        });
+      }
+
+      const trustScore = scoreMatch ? parseInt(scoreMatch[1]) : undefined;
+      const riskLevel  = riskMatch  ? riskMatch[1].toUpperCase() : undefined;
+
+      const badge =
+        trustScore !== undefined && trustScore >= 75
+          ? { background: "rgba(16,185,129,0.1)",  border: "1px solid rgba(16,185,129,0.3)",  color: "#10B981" }
+          : trustScore !== undefined && trustScore >= 50
+          ? { background: "rgba(251,185,45,0.1)",  border: "1px solid rgba(251,185,45,0.3)",  color: "#FBB92D" }
+          : { background: "rgba(239,68,68,0.1)",   border: "1px solid rgba(239,68,68,0.3)",   color: "#EF4444" };
+
+      setResult({
+        trustScore,
+        maxScore:       scoreMatch ? parseInt(scoreMatch[2]) : 100,
+        riskLevel,
+        recommendation: recMatch ? recMatch[1].trim() : riskLevel,
+        dimensions,
+        badge,
+        rawReport:      report,
+      });
+
       setPageState("done");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -125,20 +132,24 @@ setResult({
       setPageState("error");
     }
   };
+
   const reset = () => {
     setPageState("idle");
     setTarget("");
     setResult(null);
     setErrorMsg(null);
   };
+
   const badgeColor = (risk?: string) => {
     if (!risk) return "#8B96A7";
-    if (risk === "LOW")    return "#10B981";
-    if (risk === "HIGH")   return "#EF4444";
+    if (risk === "LOW")  return "#10B981";
+    if (risk === "HIGH") return "#EF4444";
     return "#FBB92D";
   };
+
   return (
     <div style={{ minHeight: "100vh", background: "#08090D", color: "#F5F7FA", fontFamily: "Inter, sans-serif" }}>
+
       {/* nav */}
       <nav style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -160,9 +171,11 @@ setResult({
           <ArrowLeft size={14} /> Back to home
         </Link>
       </nav>
+
       {/* main */}
       <main style={{ maxWidth: 680, margin: "0 auto", padding: "clamp(48px, 8vh, 80px) 24px 80px" }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+
           <div style={{ marginBottom: 40 }}>
             <p style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 14 }}>
               TRUST VERIFICATION
@@ -174,9 +187,11 @@ setResult({
               Submit an entity for full trust verification. Results include a scored report, dimension breakdown, and an evidence-backed recommendation.
             </p>
           </div>
+
           <AnimatePresence mode="wait">
-            {/* ── FORM ── */}
-            {pageState === "idle" || pageState === "error" ? (
+
+            {/* FORM */}
+            {(pageState === "idle" || pageState === "error") && (
               <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div style={{
                   background: "rgba(17,20,26,0.8)", border: "1px solid rgba(255,255,255,0.08)",
@@ -208,6 +223,7 @@ setResult({
                       ))}
                     </div>
                   </div>
+
                   {/* step 2 */}
                   <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <label style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", display: "block", marginBottom: 14 }}>
@@ -228,6 +244,7 @@ setResult({
                       onBlur={(e)  => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
                   </div>
+
                   {/* step 3 */}
                   <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <label style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", display: "block", marginBottom: 14 }}>
@@ -261,6 +278,7 @@ setResult({
                       ))}
                     </div>
                   </div>
+
                   {/* submit row */}
                   <div style={{ padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -291,8 +309,9 @@ setResult({
                   </div>
                 </div>
               </motion.div>
-            ) : null}
-            {/* ── LOADING ── */}
+            )}
+
+            {/* LOADING */}
             {pageState === "loading" && (
               <motion.div
                 key="loading"
@@ -326,11 +345,12 @@ setResult({
                   Verifying <strong style={{ color: "#00D4FF" }}>{target}</strong>
                 </p>
                 <p style={{ color: "#8B96A7", fontSize: 13, margin: 0 }}>
-                  Scanning trust signals across {DEPTHS.find(d => d.id === depth)?.desc.toLowerCase()}…
+                  Scanning trust signals — {DEPTHS.find(d => d.id === depth)?.desc.toLowerCase()}…
                 </p>
               </motion.div>
             )}
-            {/* ── RESULT ── */}
+
+            {/* RESULT */}
             {pageState === "done" && result && (
               <motion.div
                 key="done"
@@ -374,6 +394,7 @@ setResult({
                       </div>
                     )}
                   </div>
+
                   {/* dimensions */}
                   {Array.isArray(result.dimensions) && result.dimensions.length > 0 && (
                     <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -406,8 +427,26 @@ setResult({
                       </div>
                     </div>
                   )}
-                  {/* raw JSON fallback if no dimensions */}
-                  {(!Array.isArray(result.dimensions) || result.dimensions.length === 0) && (
+
+                  {/* raw report */}
+                  {result.rawReport && (
+                    <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
+                        Full Report
+                      </div>
+                      <pre style={{
+                        background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 16,
+                        fontSize: 11, color: "#8B96A7", overflowX: "auto",
+                        fontFamily: "monospace", margin: 0, lineHeight: 1.7,
+                        whiteSpace: "pre-wrap", wordBreak: "break-word"
+                      }}>
+                        {result.rawReport}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* fallback if nothing parsed */}
+                  {!result.rawReport && (!Array.isArray(result.dimensions) || result.dimensions.length === 0) && (
                     <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                       <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
                         Raw Result
@@ -421,6 +460,7 @@ setResult({
                       </pre>
                     </div>
                   )}
+
                   {/* actions */}
                   <div style={{ padding: "24px 32px", display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <button
@@ -439,9 +479,11 @@ setResult({
                 </div>
               </motion.div>
             )}
+
           </AnimatePresence>
         </motion.div>
       </main>
+
       {/* grid bg */}
       <div style={{
         position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
@@ -450,12 +492,4 @@ setResult({
       }} />
     </div>
   );
-}" don't do muc just fix this error [plugin:vite:react-babel] C:\Users\USER\Documents\veris-site\src\pages\AuditPage.tsx: Unexpected token (81:10)
-  84 |       }
-C:/Users/USER/Documents/veris-site/src/pages/AuditPage.tsx:81:10
-79 |  }),
-80 |  
-81 |        if (!res.ok) {
-   |            ^
-82 |          const body = await res.text().catch(() => "");
-83 |          throw new Error(body || `Server returned ${res.status}`)
+}
