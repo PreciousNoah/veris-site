@@ -1,0 +1,318 @@
+:root {
+  --bg: #08090D;
+  --surface: #11141A;
+  --text: #F5F7FA;
+  --muted: #8B96A7;
+  --border: rgba(255,255,255,0.08);
+  --primary: #00D4FF;
+  --secondary: #5EEAD4;
+  --glow: rgba(0,212,255,0.35);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ─── Hero ─────────────────────────────────────────────────── */
+.veris-hero-card {
+  max-width: 1600px;
+  width: calc(100% - 48px);
+  margin: 24px auto;
+  border-radius: 28px;
+  min-height: 760px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface);
+}
+
+.veris-nav {
+  position: relative;
+  z-index: 10;
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.veris-nav-links {
+  display: flex;
+  gap: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.veris-hamburger {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text);
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s;
+}
+
+.veris-hamburger:hover {
+  border-color: rgba(0,212,255,0.4);
+  color: var(--primary);
+}
+
+.veris-mobile-menu {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: rgba(17,20,26,0.96);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 20px 24px 24px;
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.veris-mobile-link {
+  display: block;
+  padding: 14px 0;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: color 0.2s;
+}
+
+.veris-mobile-link:hover { color: var(--text); }
+
+.veris-hero-content {
+  text-align: center;
+  padding: 80px 24px;
+  position: relative;
+  z-index: 10;
+}
+
+.veris-hero-cta {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+/* ─── Pipeline ──────────────────────────────────────────────── */
+.veris-pipeline-nodes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+}
+
+.veris-pipeline-scroll {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Trust Score Dashboard ─────────────────────────────────── */
+.veris-trust-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ─── Stats ─────────────────────────────────────────────────── */
+.veris-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.veris-stat-item {
+  padding: 40px 32px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+}
+
+.veris-stat-item:last-child {
+  border-right: none;
+}
+
+/* ─── Timeline events tooltip ───────────────────────────────── */
+.veris-timeline-events {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+}
+
+/* ─── Simulator tabs ────────────────────────────────────────── */
+.veris-tab-label {
+  display: inline;
+}
+
+.veris-tab-label-short {
+  display: none;
+}
+
+/* ─── Footer ────────────────────────────────────────────────── */
+.veris-footer-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 56px;
+}
+
+.veris-footer-inner {
+  padding: 56px 56px 40px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE — tablet (≤ 900px)
+───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .veris-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 40px;
+  }
+
+  .veris-trust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .veris-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .veris-stat-item {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 32px 24px;
+  }
+
+  .veris-stat-item:nth-child(odd) {
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .veris-stat-item:nth-last-child(-n+2):not(:nth-child(odd)) {
+    border-bottom: none;
+  }
+
+  .veris-stat-item:last-child {
+    border-bottom: none;
+    border-right: none;
+  }
+
+  .veris-stat-item:nth-last-child(2):nth-child(odd) {
+    border-bottom: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE — mobile (≤ 768px)
+───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .veris-hero-card {
+    width: calc(100% - 24px);
+    margin: 12px auto;
+    border-radius: 20px;
+    min-height: unset;
+  }
+
+  .veris-nav {
+    padding: 20px 20px;
+  }
+
+  .veris-nav-links {
+    display: none;
+  }
+
+  .veris-hamburger {
+    display: flex;
+  }
+
+  .veris-hero-content {
+    padding: 48px 20px 64px;
+  }
+
+  .veris-hero-cta {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .veris-hero-cta button {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .veris-pipeline-nodes {
+    padding: 0 8px;
+    gap: 0;
+  }
+
+  .veris-footer-inner {
+    padding: 36px 24px 28px;
+  }
+
+  .veris-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    margin-bottom: 32px;
+  }
+
+  .veris-timeline-events {
+    grid-template-columns: 1fr;
+  }
+
+  .veris-tab-label {
+    display: none;
+  }
+
+  .veris-tab-label-short {
+    display: inline;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE — small mobile (≤ 480px)
+───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .veris-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .veris-stat-item {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 28px 16px;
+  }
+
+  .veris-stat-item:nth-child(odd) {
+    border-right: none;
+  }
+
+  .veris-stat-item:last-child {
+    border-bottom: none;
+  }
+}
