@@ -315,4 +315,9 @@ body {
   .veris-stat-item:last-child {
     border-bottom: none;
   }
+
+  .veris-docs-sidebar { display: none; }
+@media (min-width: 900px) {
+  .veris-docs-sidebar { display: block; }
+}
 }
