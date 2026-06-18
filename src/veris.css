@@ -186,6 +186,16 @@ body {
   padding: 56px 56px 40px;
 }
 
+/* ─── Docs Layout ────────────────────────────────────────────── */
+.veris-docs-layout {
+  display: block;
+  width: 100%;
+}
+
+.veris-docs-sidebar {
+  display: none;
+}
+
 /* ─────────────────────────────────────────────────────────────
    RESPONSIVE — tablet (≤ 900px)
 ───────────────────────────────────────────────────────────── */
@@ -225,6 +235,18 @@ body {
 
   .veris-stat-item:nth-last-child(2):nth-child(odd) {
     border-bottom: none;
+  }
+
+  /* Docs sidebar appears */
+  .veris-docs-layout {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+  }
+
+  .veris-docs-sidebar {
+    display: block;
+    flex: 0 0 180px;
   }
 }
 
@@ -292,6 +314,25 @@ body {
   .veris-tab-label-short {
     display: inline;
   }
+
+  /* Hide sidebar on mobile */
+  .veris-docs-layout {
+    display: block !important;
+  }
+
+  .veris-docs-sidebar {
+    display: none !important;
+  }
+
+  /* Show mobile toggle button */
+  .veris-mobile-toggle {
+    display: flex !important;
+  }
+
+  /* Hide "Back to home" text on mobile, show only icon */
+  .veris-back-label {
+    display: none;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -315,27 +356,25 @@ body {
   .veris-stat-item:last-child {
     border-bottom: none;
   }
+
+  /* Smaller padding for docs */
+  .veris-hero-card {
+    width: calc(100% - 16px);
+  }
 }
 
-/* ─── Docs layout ────────────────────────────────────────────── */
-.veris-docs-layout {
-  display: block;
-  width: 100%;
-}
-
-.veris-docs-sidebar {
-  display: none;
-}
-
-@media (min-width: 900px) {
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE — desktop (≥ 901px)
+───────────────────────────────────────────────────────────── */
+@media (min-width: 901px) {
   .veris-docs-layout {
-    display: flex;
+    display: flex !important;
     gap: 40px;
     align-items: flex-start;
   }
 
   .veris-docs-sidebar {
-    display: block;
+    display: block !important;
     flex: 0 0 180px;
   }
 }
