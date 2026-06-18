@@ -33,12 +33,16 @@ export function TrustTimeline() {
       style={{ width: "100%", maxWidth: 1200, margin: "0 auto", padding: "0 24px 100px" }}
     >
       <div style={{ textAlign: "center", marginBottom: 56 }}>
-        <p style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>MONITORING</p>
+        <p style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
+          MONITORING — ROADMAP FEATURE
+        </p>
         <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 300, color: "#F5F7FA", margin: "0 0 16px", lineHeight: 1.15 }}>
           Trust Evolution
         </h2>
         <p style={{ fontSize: 16, color: "#8B96A7", maxWidth: 500, margin: "0 auto", lineHeight: 1.65 }}>
-          Trust is dynamic. VERIS continuously monitors changes over time.
+          Trust is dynamic. As VERIS accumulates audit receipts, it will track how
+          an entity's trust score changes over time — surfacing early warning signals
+          before they become obvious.
         </p>
       </div>
 
@@ -49,6 +53,18 @@ export function TrustTimeline() {
         padding: "clamp(24px, 5vw, 40px) clamp(16px, 4vw, 32px)",
         boxShadow: "0 24px 64px rgba(0,0,0,0.4)"
       }}>
+        {/* illustrative badge */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          background: "rgba(251,185,45,0.08)", border: "1px solid rgba(251,185,45,0.2)",
+          borderRadius: 6, padding: "4px 10px", marginBottom: 20
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FBB92D", flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: "#FBB92D", letterSpacing: "0.08em" }}>
+            ILLUSTRATIVE EXAMPLE — historical tracking launches as receipt volume grows
+          </span>
+        </div>
+
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
           <div>
             <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 4 }}>ENTITY</div>
