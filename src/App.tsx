@@ -9,6 +9,7 @@ import PlaceholderPage from "@/pages/PlaceholderPage";
 import ProjectAuditsPage from "@/pages/ProjectAuditsPage";
 import AgentAuditsPage from "@/pages/AgentAuditsPage";
 import DocsPage from "@/pages/DocsPage";
+import HowVerisWorksPage from "@/pages/HowVerisWorksPage";
 
 const queryClient = new QueryClient();
 
@@ -22,16 +23,6 @@ const DemoPage = () => (
   />
 );
 
-const HowItWorksPage = () => (
-  <PlaceholderPage
-    title="How VERIS Works"
-    subtitle="Methodology"
-    description="A detailed breakdown of the four-stage evidence collection, signal analysis, source verification, and trust intelligence generation process that powers every VERIS audit."
-    ctaLabel="See it in action"
-    ctaHref="/audit"
-  />
-);
-
 function Router() {
   return (
     <Switch>
@@ -40,7 +31,7 @@ function Router() {
       <Route path="/demo"           component={DemoPage}         />
       <Route path="/project-audits" component={ProjectAuditsPage}/>
       <Route path="/agent-audits"   component={AgentAuditsPage}  />
-      <Route path="/how-it-works"   component={HowItWorksPage}   />
+      <Route path="/how-it-works"   component={HowVerisWorksPage}/>
       <Route path="/docs"           component={DocsPage}         />
       <Route                        component={NotFound}         />
     </Switch>
