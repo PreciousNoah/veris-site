@@ -5,6 +5,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.veris-docs-sidebar { display: none; } @media (min-width: 900px) { .veris-docs-sidebar { display: block; } }
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
