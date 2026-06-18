@@ -315,8 +315,9 @@ body {
   .veris-stat-item:last-child {
     border-bottom: none;
   }
+}
 
-  /* Docs page layout — single column on mobile, sidebar on desktop */
+/* ─── Docs layout ────────────────────────────────────────────── */
 .veris-docs-layout {
   display: block;
   width: 100%;
