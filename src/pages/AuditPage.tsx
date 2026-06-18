@@ -1,29 +1,24 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowLeft, Globe, Github, Bot, Wallet, XCircle } from "lucide-react";
+import { ArrowLeft, Globe, Bot, XCircle } from "lucide-react";
 import "@/veris.css";
 
-const BACKEND_URL = "https://veris-agent.onrender.com";
+const BACKEND_URL = "https://veris-agent-production.up.railway.app";
 
 const ENTITY_TYPES = [
   { id: "project", label: "Web3 / DeFi Project", Icon: Globe },
   { id: "agent",   label: "AI Agent",             Icon: Bot },
-  { id: "github",  label: "GitHub Repository",    Icon: Github },
-  { id: "wallet",  label: "Wallet Address",       Icon: Wallet },
 ];
 
 const DEPTHS = [
   { id: "standard", label: "Standard",  desc: "Core trust signals — ~60 seconds" },
   { id: "deep",     label: "Deep Dive", desc: "Full evidence scan — ~3 minutes"  },
-  { id: "realtime", label: "Real-Time", desc: "Live monitoring + instant report" },
 ];
 
 const placeholders: Record<string, string> = {
-  project: "https://yourproject.xyz",
-  agent:   "agent-xyz-001 or a DID identifier",
-  github:  "https://github.com/org/repo",
-  wallet:  "0x… or a Solana address",
+  project: "Aave, https://aave.com, or project name",
+  agent:   "Agent name (e.g. ZERU) — or paste the CROO agent ID",
 };
 
 function VerisMark() {
@@ -43,10 +38,66 @@ type AuditResult = {
   dimensions?: { label: string; score: number; max: number }[];
   badge?: { background: string; border: string; color: string };
   rawReport?: string;
+  incidents?: string[];
   [key: string]: unknown;
 };
 
 type PageState = "idle" | "loading" | "done" | "error";
+
+// ─── REPORT PARSER ───────────────────────────────────────────────────
+// Handles BOTH report formats:
+//   Project reports: "LEGITIMACY:   72/100  ████░░░░"
+//   Agent reports:   "OVERALL SCORE:    78/100  ████░░░░"
+
+function parseReport(report: string): {
+  trustScore?: number;
+  maxScore: number;
+  riskLevel?: string;
+  recommendation?: string;
+  dimensions: { label: string; score: number; max: number }[];
+  incidents: string[];
+} {
+  // Try agent report format first: "OVERALL SCORE:    78/100"
+  let scoreMatch = report.match(/OVERALL SCORE:\s*(\d+)\/(\d+)/i);
+  // Fall back to project report format: "LEGITIMACY:   72/100"
+  if (!scoreMatch) {
+    scoreMatch = report.match(/LEGITIMACY:\s*(\d+)\/100/i);
+  }
+
+  // Recommendation — handles both "RECOMMENDATION:  ✓ TRUSTED" and "RECOMMENDATION\nTRUSTED"
+  const recMatch =
+    report.match(/RECOMMENDATION:\s*[^\w]*([A-Z][A-Z\s]+?)(?:\s*\[|\n)/) ||
+    report.match(/RECOMMENDATION\s*\n+\s*([A-Z][A-Z\s]+)/);
+
+  const riskMatch = report.match(/RISK LEVEL:\s*(\w+)/i);
+
+  // Dimension lines — match patterns like "  Identity:       72/100"
+  const dimensions: { label: string; score: number; max: number }[] = [];
+  const dimRegex = /^\s{2}([A-Za-z][A-Za-z\s./]+?):\s+(\d+)\/100\s*$/gm;
+  let dimMatch;
+  while ((dimMatch = dimRegex.exec(report)) !== null) {
+    const label = dimMatch[1].trim();
+    if (/^(LEGITIMACY|MATURITY|OVERALL SCORE|CONFIDENCE)$/i.test(label)) continue;
+    dimensions.push({ label, score: parseInt(dimMatch[2]), max: 100 });
+  }
+
+  // Major incidents block (ground truth incidents)
+  const incidents: string[] = [];
+  const incidentBlockMatch = report.match(/MAJOR HISTORICAL INCIDENTS[^\n]*\n[-─]+\n([\s\S]*?)\n[-─]+/);
+  if (incidentBlockMatch) {
+    const lines = incidentBlockMatch[1].split("\n").filter((l) => l.trim().match(/^[🔴🟠🟡🟢⚠]/));
+    incidents.push(...lines.map((l) => l.trim()));
+  }
+
+  return {
+    trustScore: scoreMatch ? parseInt(scoreMatch[1]) : undefined,
+    maxScore: scoreMatch ? parseInt(scoreMatch[2] ?? "100") : 100,
+    riskLevel: riskMatch ? riskMatch[1].toUpperCase() : undefined,
+    recommendation: recMatch ? recMatch[1].trim() : undefined,
+    dimensions,
+    incidents,
+  };
+}
 
 export default function AuditPage() {
   const [entityType, setEntityType] = useState("project");
@@ -63,68 +114,61 @@ export default function AuditPage() {
     setResult(null);
 
     try {
-      // 1. Make the request
+      const trimmed = target.trim();
+
+      const requirements =
+        entityType === "agent"
+          ? {
+              type: "agent",
+              agentId: trimmed,
+              agentName: trimmed,
+              mode: depth === "deep" ? "full" : "quick",
+              category: "general",
+            }
+          : {
+              type: "project",
+              name: trimmed,
+              website: trimmed.startsWith("http") ? trimmed : undefined,
+              mode: depth === "deep" ? "full" : "quick",
+            };
+
       const res = await fetch(`${BACKEND_URL}/audit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requirements: {
-            type:      entityType === "agent" ? "agent" : "project",
-            name:      target.trim(),
-            website:   entityType === "project" ? target.trim() : undefined,
-            agentId:   entityType === "agent"   ? target.trim() : undefined,
-            serviceId: entityType === "agent"   ? target.trim() : undefined,
-            mode:      depth === "deep" ? "full" : "quick",
-            category:  "general",
-          },
-        }),
+        body: JSON.stringify({ requirements }),
       });
 
-      // 2. Check for HTTP errors
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         throw new Error(body || `Server returned ${res.status}`);
       }
 
-      // 3. Parse the response
       const data = await res.json();
       const report: string = data.report || "";
 
-      const scoreMatch = report.match(/OVERALL TRUST SCORE:\s*(\d+)\/(\d+)/);
-      const riskMatch  = report.match(/RISK LEVEL:\s*(\w+)/);
-      const recMatch   = report.match(/RECOMMENDATION\n([^\n]+)/);
-
-      const dimensions: { label: string; score: number; max: number }[] = [];
-      const dimRegex = /([\w\s]+):\s+(\d+)\/(\d+)\s+[█░]+/g;
-      let dimMatch;
-      while ((dimMatch = dimRegex.exec(report)) !== null) {
-        dimensions.push({
-          label: dimMatch[1].trim(),
-          score: parseInt(dimMatch[2]),
-          max:   parseInt(dimMatch[3]),
-        });
+      if (!report) {
+        throw new Error("No report returned from server.");
       }
 
-      const trustScore = scoreMatch ? parseInt(scoreMatch[1]) : undefined;
-      const riskLevel  = riskMatch  ? riskMatch[1].toUpperCase() : undefined;
+      const parsed = parseReport(report);
 
       const badge =
-        trustScore !== undefined && trustScore >= 75
-          ? { background: "rgba(16,185,129,0.1)",  border: "1px solid rgba(16,185,129,0.3)",  color: "#10B981" }
-          : trustScore !== undefined && trustScore >= 50
-          ? { background: "rgba(251,185,45,0.1)",  border: "1px solid rgba(251,185,45,0.3)",  color: "#FBB92D" }
-          : { background: "rgba(239,68,68,0.1)",   border: "1px solid rgba(239,68,68,0.3)",   color: "#EF4444" };
+        parsed.trustScore !== undefined && parsed.trustScore >= 70
+          ? { background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", color: "#10B981" }
+          : parsed.trustScore !== undefined && parsed.trustScore >= 45
+          ? { background: "rgba(251,185,45,0.1)", border: "1px solid rgba(251,185,45,0.3)", color: "#FBB92D" }
+          : { background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#EF4444" };
 
       setResult({
-        trustScore,
-        maxScore:       scoreMatch ? parseInt(scoreMatch[2]) : 100,
-        riskLevel,
-        recommendation: recMatch ? recMatch[1].trim() : riskLevel,
-        dimensions,
+        trustScore: parsed.trustScore,
+        maxScore: parsed.maxScore,
+        riskLevel: parsed.riskLevel,
+        recommendation: parsed.recommendation,
+        dimensions: parsed.dimensions,
+        incidents: parsed.incidents,
         badge,
-        rawReport:      report,
+        rawReport: report,
       });
-
       setPageState("done");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
@@ -142,15 +186,13 @@ export default function AuditPage() {
 
   const badgeColor = (risk?: string) => {
     if (!risk) return "#8B96A7";
-    if (risk === "LOW")  return "#10B981";
+    if (risk === "LOW") return "#10B981";
     if (risk === "HIGH") return "#EF4444";
     return "#FBB92D";
   };
 
   return (
     <div style={{ minHeight: "100vh", background: "#08090D", color: "#F5F7FA", fontFamily: "Inter, sans-serif" }}>
-
-      {/* nav */}
       <nav style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "20px clamp(20px, 4vw, 48px)",
@@ -166,38 +208,30 @@ export default function AuditPage() {
           href="/"
           style={{ display: "flex", alignItems: "center", gap: 6, color: "#8B96A7", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }}
           onMouseOver={(e) => (e.currentTarget.style.color = "#F5F7FA")}
-          onMouseOut={(e)  => (e.currentTarget.style.color = "#8B96A7")}
+          onMouseOut={(e) => (e.currentTarget.style.color = "#8B96A7")}
         >
           <ArrowLeft size={14} /> Back to home
         </Link>
       </nav>
 
-      {/* main */}
       <main style={{ maxWidth: 680, margin: "0 auto", padding: "clamp(48px, 8vh, 80px) 24px 80px" }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-
           <div style={{ marginBottom: 40 }}>
             <p style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 14 }}>
-              TRUST VERIFICATION
+              TRUST DUE DILIGENCE
             </p>
             <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 300, lineHeight: 1.2, margin: "0 0 12px" }}>
               Run an Audit
             </h1>
             <p style={{ color: "#8B96A7", fontSize: 15, lineHeight: 1.65, margin: 0 }}>
-              Submit an entity for full trust verification. Results include a scored report, dimension breakdown, and an evidence-backed recommendation.
+              Submit a Web3 project or AI agent for trust due diligence. Results include a scored report, signal breakdown, and evidence-backed recommendation.
             </p>
           </div>
 
           <AnimatePresence mode="wait">
-
-            {/* FORM */}
             {(pageState === "idle" || pageState === "error") && (
               <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div style={{
-                  background: "rgba(17,20,26,0.8)", border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 16, overflow: "hidden"
-                }}>
-                  {/* step 1 */}
+                <div style={{ background: "rgba(17,20,26,0.8)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
                   <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <label style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", display: "block", marginBottom: 14 }}>
                       1 — Entity type
@@ -224,7 +258,6 @@ export default function AuditPage() {
                     </div>
                   </div>
 
-                  {/* step 2 */}
                   <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <label style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", display: "block", marginBottom: 14 }}>
                       2 — Target identifier
@@ -241,11 +274,10 @@ export default function AuditPage() {
                         outline: "none", fontFamily: "inherit", transition: "border-color 0.2s"
                       }}
                       onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(0,212,255,0.3)")}
-                      onBlur={(e)  => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
                     />
                   </div>
 
-                  {/* step 3 */}
                   <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                     <label style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", display: "block", marginBottom: 14 }}>
                       3 — Verification depth
@@ -279,7 +311,6 @@ export default function AuditPage() {
                     </div>
                   </div>
 
-                  {/* submit row */}
                   <div style={{ padding: "24px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <span style={{ fontSize: 12, color: "rgba(139,150,167,0.5)" }}>
@@ -311,7 +342,6 @@ export default function AuditPage() {
               </motion.div>
             )}
 
-            {/* LOADING */}
             {pageState === "loading" && (
               <motion.div
                 key="loading"
@@ -350,7 +380,6 @@ export default function AuditPage() {
               </motion.div>
             )}
 
-            {/* RESULT */}
             {pageState === "done" && result && (
               <motion.div
                 key="done"
@@ -359,11 +388,7 @@ export default function AuditPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div style={{
-                  background: "rgba(17,20,26,0.8)", border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 16, overflow: "hidden"
-                }}>
-                  {/* score header */}
+                <div style={{ background: "rgba(17,20,26,0.8)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
                   <div style={{
                     padding: "32px", borderBottom: "1px solid rgba(255,255,255,0.06)",
                     display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap"
@@ -395,7 +420,19 @@ export default function AuditPage() {
                     )}
                   </div>
 
-                  {/* dimensions */}
+                  {Array.isArray(result.incidents) && result.incidents.length > 0 && (
+                    <div style={{ padding: "20px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(239,68,68,0.04)" }}>
+                      <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#FF6B6B", textTransform: "uppercase", marginBottom: 12 }}>
+                        ⚠ Historical Incidents Found
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {result.incidents.map((inc, i) => (
+                          <p key={i} style={{ fontSize: 13, color: "#F5F7FA", margin: 0, lineHeight: 1.5 }}>{inc}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {Array.isArray(result.dimensions) && result.dimensions.length > 0 && (
                     <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                       <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 16 }}>
@@ -428,7 +465,6 @@ export default function AuditPage() {
                     </div>
                   )}
 
-                  {/* raw report */}
                   {result.rawReport && (
                     <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                       <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
@@ -445,23 +481,6 @@ export default function AuditPage() {
                     </div>
                   )}
 
-                  {/* fallback if nothing parsed */}
-                  {!result.rawReport && (!Array.isArray(result.dimensions) || result.dimensions.length === 0) && (
-                    <div style={{ padding: "28px 32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
-                        Raw Result
-                      </div>
-                      <pre style={{
-                        background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 16,
-                        fontSize: 12, color: "#8B96A7", overflowX: "auto",
-                        fontFamily: "monospace", margin: 0, lineHeight: 1.6
-                      }}>
-                        {JSON.stringify(result, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-
-                  {/* actions */}
                   <div style={{ padding: "24px 32px", display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <button
                       onClick={reset}
@@ -471,7 +490,7 @@ export default function AuditPage() {
                         cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s"
                       }}
                       onMouseOver={(e) => { e.currentTarget.style.borderColor = "rgba(0,212,255,0.3)"; e.currentTarget.style.color = "#00D4FF"; }}
-                      onMouseOut={(e)  => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#8B96A7"; }}
+                      onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#8B96A7"; }}
                     >
                       Run another audit
                     </button>
@@ -479,12 +498,10 @@ export default function AuditPage() {
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
         </motion.div>
       </main>
 
-      {/* grid bg */}
       <div style={{
         position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
         backgroundImage: "repeating-linear-gradient(rgba(255,255,255,0.015) 0 1px, transparent 1px 100%), repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 100%)",
