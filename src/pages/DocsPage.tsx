@@ -40,9 +40,11 @@ function CodeBlock({ code, lang = "json" }: { code: string; lang?: string }) {
       <pre style={{
         background: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: "0 0 8px 8px", padding: 16, margin: 0,
-        fontSize: 12, color: "#A8EDEA", overflowX: "auto",
+        fontSize: 12, color: "#A8EDEA",
+        overflowX: "auto", overflowY: "hidden",
         fontFamily: "monospace", lineHeight: 1.65,
-        whiteSpace: "pre", wordBreak: "normal"
+        whiteSpace: "pre", wordBreak: "normal",
+        maxWidth: "100%", boxSizing: "border-box" as const,
       }}>
         {code}
       </pre>
@@ -57,35 +59,91 @@ function MethodBadge({ method }: { method: string }) {
     <span style={{
       display: "inline-flex", alignItems: "center", fontSize: 11, fontWeight: 700,
       color: c, background: `${c}14`, border: `1px solid ${c}33`,
-      borderRadius: 5, padding: "2px 8px", letterSpacing: "0.04em", marginRight: 10
+      borderRadius: 5, padding: "2px 8px", letterSpacing: "0.04em", marginRight: 8,
+      flexShrink: 0,
     }}>
       {method}
     </span>
   );
 }
 
-// Mobile-safe table row: stacks vertically on small screens
-function TableRow({
-  cells, bg, stack = false
-}: {
-  cells: { value: string; color?: string; mono?: boolean }[];
-  bg: string;
-  stack?: boolean;
-}) {
+// Stacked table row — always stacks on mobile, label on top, value below
+function InfoRow({ label, value, i }: { label: string; value: string; i: number }) {
   return (
     <div style={{
-      display: "flex",
-      flexDirection: stack ? "column" : "row",
-      flexWrap: "wrap",
       padding: "12px 16px",
-      gap: stack ? 4 : 8,
-      background: bg,
+      background: i % 2 === 0 ? "rgba(17,20,26,0.5)" : "rgba(17,20,26,0.3)",
     }}>
-      {cells.map((cell, i) => (
-        cell.mono
-          ? <code key={i} style={{ fontSize: 12, color: cell.color || "#F5F7FA", wordBreak: "break-all", lineHeight: 1.5 }}>{cell.value}</code>
-          : <span key={i} style={{ fontSize: 12.5, color: cell.color || "#8B96A7", lineHeight: 1.5 }}>{cell.value}</span>
-      ))}
+      <code style={{ fontSize: 12, color: "#00D4FF", display: "block", marginBottom: 3 }}>{label}</code>
+      <span style={{ fontSize: 13, color: "#8B96A7", lineHeight: 1.5 }}>{value}</span>
+    </div>
+  );
+}
+
+function FieldRow({ name, type, desc, i }: { name: string; type: string; desc: string; i: number }) {
+  return (
+    <div style={{
+      padding: "12px 16px",
+      background: i % 2 === 0 ? "rgba(17,20,26,0.5)" : "rgba(17,20,26,0.3)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
+        <code style={{ fontSize: 12, color: "#00D4FF" }}>{name}</code>
+        <span style={{ fontSize: 11, color: "#FBB92D" }}>{type}</span>
+      </div>
+      <span style={{ fontSize: 13, color: "#8B96A7", lineHeight: 1.5 }}>{desc}</span>
+    </div>
+  );
+}
+
+function SchemaRow({ pattern, desc, i }: { pattern: string; desc: string; i: number }) {
+  return (
+    <div style={{
+      padding: "12px 16px",
+      background: i % 2 === 0 ? "rgba(17,20,26,0.5)" : "rgba(17,20,26,0.3)",
+    }}>
+      <code style={{ fontSize: 12, color: "#5EEAD4", display: "block", marginBottom: 3, wordBreak: "break-all" }}>{pattern}</code>
+      <span style={{ fontSize: 13, color: "#8B96A7" }}>{desc}</span>
+    </div>
+  );
+}
+
+function ErrorRow({ code, desc, i }: { code: string; desc: string; i: number }) {
+  return (
+    <div style={{
+      padding: "12px 16px",
+      background: i % 2 === 0 ? "rgba(17,20,26,0.5)" : "rgba(17,20,26,0.3)",
+    }}>
+      <code style={{ fontSize: 13, fontWeight: 700, color: "#FF6B6B", display: "block", marginBottom: 3 }}>{code}</code>
+      <span style={{ fontSize: 13, color: "#8B96A7" }}>{desc}</span>
+    </div>
+  );
+}
+
+function TableWrap({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, overflow: "hidden", marginTop: 8, width: "100%" }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 style={{ fontSize: 20, fontWeight: 500, margin: "0 0 10px", wordBreak: "break-word" }}>{children}</h2>;
+}
+
+function Body({ children, mb = 20 }: { children: React.ReactNode; mb?: number }) {
+  return <p style={{ color: "#8B96A7", fontSize: 14, lineHeight: 1.75, margin: `0 0 ${mb}px`, wordBreak: "break-word" }}>{children}</p>;
+}
+
+function IC({ text }: { text: string }) {
+  return <code style={{ background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 4, fontSize: 13, wordBreak: "break-all" }}>{text}</code>;
+}
+
+function EndpointHead({ method, path }: { method: string; path: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+      <MethodBadge method={method} />
+      <code style={{ fontSize: 15, fontWeight: 600, wordBreak: "break-all" }}>{path}</code>
     </div>
   );
 }
@@ -101,12 +159,6 @@ const SECTIONS = [
   { id: "croo", label: "CROO Orders" },
 ];
 
-const inlineCode = (text: string) => (
-  <code style={{ background: "rgba(255,255,255,0.06)", padding: "2px 6px", borderRadius: 4, fontSize: 13 }}>
-    {text}
-  </code>
-);
-
 export default function DocsPage() {
   const [active, setActive] = useState("overview");
 
@@ -115,188 +167,165 @@ export default function DocsPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const sectionHead = (title: string) => (
-    <h2 style={{ fontSize: 20, fontWeight: 500, margin: "0 0 10px" }}>{title}</h2>
-  );
-
-  const body = (text: string | React.ReactNode, mb = 20) => (
-    <p style={{ color: "#8B96A7", fontSize: 14, lineHeight: 1.75, margin: `0 0 ${mb}px` }}>{text}</p>
-  );
-
-  const endpointHead = (method: string, path: string) => (
-    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-      <MethodBadge method={method} />
-      <code style={{ fontSize: 15, fontWeight: 600 }}>{path}</code>
-    </div>
-  );
-
-  const table = (rows: { cells: { value: string; color?: string; mono?: boolean }[] }[]) => (
-    <div style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, overflow: "hidden", marginTop: 8 }}>
-      {rows.map((row, i) => (
-        <TableRow
-          key={i}
-          cells={row.cells}
-          bg={i % 2 === 0 ? "rgba(17,20,26,0.5)" : "rgba(17,20,26,0.3)"}
-          stack={row.cells.length > 2}
-        />
-      ))}
-    </div>
-  );
-
   return (
-    <div style={{ minHeight: "100vh", background: "#08090D", color: "#F5F7FA", fontFamily: "Inter, sans-serif" }}>
+    <div style={{
+      minHeight: "100vh",
+      background: "#08090D",
+      color: "#F5F7FA",
+      fontFamily: "Inter, sans-serif",
+      overflowX: "hidden",  /* prevents any child from causing page-level horizontal scroll */
+    }}>
+
+      {/* ── NAV ── */}
       <nav style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "20px clamp(16px, 4vw, 48px)",
+        padding: "20px 20px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         position: "sticky", top: 0, zIndex: 10,
-        background: "rgba(8,9,13,0.85)", backdropFilter: "blur(16px)"
+        background: "rgba(8,9,13,0.85)", backdropFilter: "blur(16px)",
+        boxSizing: "border-box", width: "100%",
       }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
           <VerisMark />
           <span style={{ fontWeight: 700, fontSize: 18, color: "#F5F7FA", letterSpacing: "0.04em" }}>VERIS</span>
         </Link>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, color: "#8B96A7", fontSize: 13, textDecoration: "none" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, color: "#8B96A7", fontSize: 13, textDecoration: "none", flexShrink: 0 }}>
           <ArrowLeft size={14} /> Back to home
         </Link>
       </nav>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(32px, 6vh, 64px) clamp(16px, 4vw, 32px) 120px", display: "flex", gap: 40, alignItems: "flex-start" }}>
+      {/* ── LAYOUT WRAPPER — no flex on mobile ── */}
+      <div style={{
+        maxWidth: 1100,
+        margin: "0 auto",
+        padding: "40px 20px 120px",
+        boxSizing: "border-box",
+        width: "100%",
+      }}>
+        {/* On desktop the sidebar sits beside content via CSS class */}
+        <div className="veris-docs-layout">
 
-        {/* sidebar — hidden on mobile, shown on desktop via veris.css */}
-        <aside style={{ flex: "0 0 180px", display: "none" }} className="veris-docs-sidebar">
-          <div style={{ position: "sticky", top: 90 }}>
-            <p style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 14 }}>
-              Contents
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {SECTIONS.map((s) => (
-                <button key={s.id} onClick={() => scrollTo(s.id)} style={{
-                  textAlign: "left",
-                  background: active === s.id ? "rgba(0,212,255,0.06)" : "transparent",
-                  border: "none",
-                  borderLeft: `2px solid ${active === s.id ? "#00D4FF" : "transparent"}`,
-                  color: active === s.id ? "#00D4FF" : "#8B96A7",
-                  fontSize: 13, padding: "7px 12px", cursor: "pointer",
-                  fontFamily: "inherit", borderRadius: "0 6px 6px 0", transition: "color 0.2s"
-                }}>
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* main content — minWidth: 0 is critical to prevent flex overflow */}
-        <main style={{ flex: "1 1 auto", minWidth: 0 }}>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-
-            {/* header */}
-            <div style={{ marginBottom: 48 }}>
-              <p style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
-                API & GUIDES
+          {/* SIDEBAR */}
+          <aside className="veris-docs-sidebar">
+            <div style={{ position: "sticky", top: 90 }}>
+              <p style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 14 }}>
+                Contents
               </p>
-              <h1 style={{ fontSize: "clamp(1.8rem, 5vw, 3rem)", fontWeight: 300, lineHeight: 1.15, margin: "0 0 14px" }}>
-                Documentation
-              </h1>
-              <p style={{ color: "#8B96A7", fontSize: 15, lineHeight: 1.7, margin: 0 }}>
-                VERIS is reachable through CROO orders or directly via HTTP.
-                Every endpoint returns a structured trust report you can parse, store, or display.
-              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {SECTIONS.map((s) => (
+                  <button key={s.id} onClick={() => scrollTo(s.id)} style={{
+                    textAlign: "left",
+                    background: active === s.id ? "rgba(0,212,255,0.06)" : "transparent",
+                    border: "none",
+                    borderLeft: `2px solid ${active === s.id ? "#00D4FF" : "transparent"}`,
+                    color: active === s.id ? "#00D4FF" : "#8B96A7",
+                    fontSize: 13, padding: "7px 12px", cursor: "pointer",
+                    fontFamily: "inherit", borderRadius: "0 6px 6px 0",
+                  }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
+          </aside>
 
-            {/* ── Overview ── */}
-            <section id="overview" style={{ marginBottom: 48 }}>
-              {sectionHead("Overview")}
-              {body("VERIS performs trust due diligence on two entity types — Web3 projects and AI agents — and returns a plain-text structured report inside a JSON envelope. The same endpoints power both the live website and CROO order fulfillment.")}
-              {table([
-                { cells: [{ value: "Base URL", color: "#00D4FF", mono: true }, { value: "Your Railway / Render deployment URL" }] },
-                { cells: [{ value: "Protocol", color: "#00D4FF", mono: true }, { value: "REST over HTTPS — JSON request & response bodies" }] },
-                { cells: [{ value: "Auth", color: "#00D4FF", mono: true }, { value: "None required for direct HTTP calls" }] },
-                { cells: [{ value: "Rate limits", color: "#00D4FF", mono: true }, { value: "None enforced yet — each audit runs live web search" }] },
-              ])}
-            </section>
+          {/* MAIN — minWidth:0 stops flex children overflowing */}
+          <main style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
 
-            {/* ── Auth ── */}
-            <section id="auth" style={{ marginBottom: 48 }}>
-              {sectionHead("Authentication")}
-              {body(<>Direct HTTP calls to {inlineCode("/audit")}, {inlineCode("/compare")}, and {inlineCode("/receipts")} require no API key. Authentication for CROO orders is handled entirely by the CROO SDK — requesters interact through the Agent Store, not raw HTTP.</>)}
-            </section>
+              {/* Header */}
+              <div style={{ marginBottom: 48 }}>
+                <p style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B96A7", textTransform: "uppercase", marginBottom: 12 }}>
+                  API & GUIDES
+                </p>
+                <h1 style={{ fontSize: "clamp(1.8rem, 8vw, 3rem)", fontWeight: 300, lineHeight: 1.15, margin: "0 0 14px", wordBreak: "break-word" }}>
+                  Documentation
+                </h1>
+                <Body>
+                  VERIS is reachable through CROO orders or directly via HTTP.
+                  Every endpoint returns a structured trust report you can parse, store, or display.
+                </Body>
+              </div>
 
-            {/* ── POST /audit ── */}
-            <section id="audit" style={{ marginBottom: 48 }}>
-              {endpointHead("POST", "/audit")}
-              {body("Runs project or agent due diligence and returns the full report. This is the core endpoint.")}
+              {/* Overview */}
+              <section id="overview" style={{ marginBottom: 48 }}>
+                <SectionTitle>Overview</SectionTitle>
+                <Body>VERIS performs trust due diligence on Web3 projects and AI agents, returning a plain-text structured report inside a JSON envelope. The same endpoints power the live website and CROO order fulfillment.</Body>
+                <TableWrap>
+                  <InfoRow i={0} label="Base URL" value="Your Railway / Render deployment URL" />
+                  <InfoRow i={1} label="Protocol" value="REST over HTTPS — JSON request & response bodies" />
+                  <InfoRow i={2} label="Auth" value="None required for direct HTTP calls" />
+                  <InfoRow i={3} label="Rate limits" value="None enforced yet — each audit runs live web search" />
+                </TableWrap>
+              </section>
 
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 2px" }}>Project request</p>
-              <CodeBlock code={`{
+              {/* Auth */}
+              <section id="auth" style={{ marginBottom: 48 }}>
+                <SectionTitle>Authentication</SectionTitle>
+                <Body>Direct HTTP calls to <IC text="/audit" />, <IC text="/compare" />, and <IC text="/receipts" /> require no API key. Authentication for CROO orders is handled by the CROO SDK — requesters interact through the Agent Store, not raw HTTP.</Body>
+              </section>
+
+              {/* POST /audit */}
+              <section id="audit" style={{ marginBottom: 48 }}>
+                <EndpointHead method="POST" path="/audit" />
+                <Body>Runs project or agent due diligence and returns the full report.</Body>
+
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 2px" }}>Project request</p>
+                <CodeBlock code={`{
   "requirements": {
     "type": "project",
     "name": "Aave",
     "website": "https://aave.com",
     "github": "https://github.com/aave",
-    "twitter": "https://x.com/aave",
     "mode": "full"
   }
 }`} />
 
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 2px" }}>Agent request</p>
-              <CodeBlock code={`{
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 2px" }}>Agent request</p>
+                <CodeBlock code={`{
   "requirements": {
     "type": "agent",
     "agentId": "1b301682-55f4-4ca2-8fb6-deff838ab9fe",
     "agentName": "ZERU",
     "endpointUrl": "https://zeru-agent.example.app",
-    "serviceDescription": "DeFi research and market intelligence",
     "category": "research",
     "mode": "full"
   }
 }`} />
 
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 2px" }}>Response</p>
-              <CodeBlock code={`{
-  "report": "VERIS TRUST REPORT\\n══════...\\n(full structured text)"
-}`} />
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 2px" }}>Response</p>
+                <CodeBlock code={`{ "report": "VERIS TRUST REPORT\\n══...\\n(full text)" }`} />
 
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 4px" }}>Request fields</p>
-              {table([
-                { cells: [{ value: "type", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: '"project" or "agent" — required' }] },
-                { cells: [{ value: "name", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: "Project name — required for project audits" }] },
-                { cells: [{ value: "website / github / twitter", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: "Optional URLs to help entity resolution" }] },
-                { cells: [{ value: "agentId", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: "CROO agent ID — required for agent audits" }] },
-                { cells: [{ value: "endpointUrl", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: "Optional. Enables Layer 3 HTTP prompt testing" }] },
-                { cells: [{ value: "category", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: "research | trading | data | writing | coding | defi | security | general" }] },
-                { cells: [{ value: "mode", color: "#00D4FF", mono: true }, { value: "string", color: "#FBB92D" }, { value: '"quick" or "full" — controls verification depth' }] },
-              ])}
-            </section>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F7FA", margin: "20px 0 4px" }}>Request fields</p>
+                <TableWrap>
+                  <FieldRow i={0} name="type" type="string" desc='"project" or "agent" — required' />
+                  <FieldRow i={1} name="name" type="string" desc="Project name — required for project audits" />
+                  <FieldRow i={2} name="website / github" type="string" desc="Optional URLs to help entity resolution" />
+                  <FieldRow i={3} name="agentId" type="string" desc="CROO agent ID — required for agent audits" />
+                  <FieldRow i={4} name="endpointUrl" type="string" desc="Optional. Enables Layer 3 HTTP prompt testing" />
+                  <FieldRow i={5} name="category" type="string" desc="research | trading | data | writing | coding | defi | security | general" />
+                  <FieldRow i={6} name="mode" type="string" desc='"quick" or "full" — controls depth' />
+                </TableWrap>
+              </section>
 
-            {/* ── POST /compare ── */}
-            <section id="compare" style={{ marginBottom: 48 }}>
-              {endpointHead("POST", "/compare")}
-              {body("Runs due diligence on 2–5 agents in parallel and returns a ranked comparison table with a single best-fit recommendation.")}
-              <CodeBlock code={`{
+              {/* POST /compare */}
+              <section id="compare" style={{ marginBottom: 48 }}>
+                <EndpointHead method="POST" path="/compare" />
+                <Body>Runs due diligence on 2–5 agents in parallel and returns a ranked comparison table with a single recommendation.</Body>
+                <CodeBlock code={`{
   "agents": [
-    {
-      "agentId": "...",
-      "agentName": "ZERU",
-      "endpointUrl": "https://zeru.example.app",
-      "category": "research"
-    },
-    {
-      "agentId": "...",
-      "agentName": "Foundr",
-      "category": "research"
-    }
+    { "agentId": "...", "agentName": "ZERU", "category": "research" },
+    { "agentId": "...", "agentName": "Foundr", "category": "research" }
   ]
 }`} />
-              {body("Minimum 2 agents, maximum 5. Each agent also generates an individual Trust Receipt.", 0)}
-            </section>
+                <Body mb={0}>Minimum 2 agents, maximum 5. Each also generates an individual Trust Receipt.</Body>
+              </section>
 
-            {/* ── GET /receipts ── */}
-            <section id="receipts" style={{ marginBottom: 48 }}>
-              {endpointHead("GET", "/receipts/:entityId")}
-              {body("Returns the full audit history for an entity — every score, risk level, and timestamp VERIS has recorded.")}
-              <CodeBlock code={`{
+              {/* GET /receipts */}
+              <section id="receipts" style={{ marginBottom: 48 }}>
+                <EndpointHead method="GET" path="/receipts/:entityId" />
+                <Body>Returns full audit history for an entity — every score, risk level, and timestamp VERIS has recorded.</Body>
+                <CodeBlock code={`{
   "entityId": "aave",
   "receipts": [
     {
@@ -312,53 +341,54 @@ export default function DocsPage() {
   ]
 }`} />
 
-              <div style={{ marginTop: 24 }}>
-                {endpointHead("GET", "/receipts")}
-                {body("Returns the 20 most recent receipts across all audited entities — a live trust activity feed.", 0)}
-              </div>
-            </section>
+                <div style={{ marginTop: 24 }}>
+                  <EndpointHead method="GET" path="/receipts" />
+                  <Body mb={0}>Returns the 20 most recent receipts across all entities — a global activity feed.</Body>
+                </div>
+              </section>
 
-            {/* ── Schema ── */}
-            <section id="schema" style={{ marginBottom: 48 }}>
-              {sectionHead("Report Schema")}
-              {body("Reports are plain text inside a JSON envelope — human-readable and deliverable on-chain via CROO. Parse these key lines to extract structured data:")}
-              {table([
-                { cells: [{ value: "LEGITIMACY: 72/100", color: "#5EEAD4", mono: true }, { value: "Project overall score (0–100 or N/A)" }] },
-                { cells: [{ value: "OVERALL SCORE: 78/100", color: "#5EEAD4", mono: true }, { value: "Agent overall score (0–100)" }] },
-                { cells: [{ value: "RECOMMENDATION: ✓ TRUSTED", color: "#5EEAD4", mono: true }, { value: "Final verdict label" }] },
-                { cells: [{ value: "CONFIDENCE: High / Medium / Low", color: "#5EEAD4", mono: true }, { value: "How much evidence backs the score" }] },
-                { cells: [{ value: "MAJOR HISTORICAL INCIDENTS", color: "#5EEAD4", mono: true }, { value: "Ground-truth incidents block (if any)" }] },
-                { cells: [{ value: "VERIFIABLE SIGNAL COVERAGE", color: "#5EEAD4", mono: true }, { value: "Agent reports: confirmed vs. untested" }] },
-              ])}
-            </section>
+              {/* Schema */}
+              <section id="schema" style={{ marginBottom: 48 }}>
+                <SectionTitle>Report Schema</SectionTitle>
+                <Body>Reports are plain text inside a JSON envelope. Parse these key lines to extract structured data:</Body>
+                <TableWrap>
+                  <SchemaRow i={0} pattern="LEGITIMACY: 72/100" desc="Project overall score (0–100 or N/A)" />
+                  <SchemaRow i={1} pattern="OVERALL SCORE: 78/100" desc="Agent overall score (0–100)" />
+                  <SchemaRow i={2} pattern="RECOMMENDATION: ✓ TRUSTED" desc="Final verdict label" />
+                  <SchemaRow i={3} pattern="CONFIDENCE: High / Medium / Low" desc="Evidence strength behind the score" />
+                  <SchemaRow i={4} pattern="MAJOR HISTORICAL INCIDENTS" desc="Ground-truth incidents block (if any)" />
+                  <SchemaRow i={5} pattern="VERIFIABLE SIGNAL COVERAGE" desc="Agent reports: confirmed vs. untested signals" />
+                </TableWrap>
+              </section>
 
-            {/* ── Errors ── */}
-            <section id="errors" style={{ marginBottom: 48 }}>
-              {sectionHead("Errors")}
-              {table([
-                { cells: [{ value: "400", color: "#FF6B6B", mono: true }, { value: "Missing required field — e.g. no agentId, or fewer than 2 agents for /compare" }] },
-                { cells: [{ value: "500", color: "#FF6B6B", mono: true }, { value: "Upstream failure — web search, LLM extraction, or CROO call failed" }] },
-              ])}
-              <CodeBlock code={`{ "error": "Compare requires at least 2 agents" }`} />
-            </section>
+              {/* Errors */}
+              <section id="errors" style={{ marginBottom: 48 }}>
+                <SectionTitle>Errors</SectionTitle>
+                <TableWrap>
+                  <ErrorRow i={0} code="400" desc="Missing required field — e.g. no agentId, or fewer than 2 agents for /compare" />
+                  <ErrorRow i={1} code="500" desc="Upstream failure — web search, LLM extraction, or CROO call failed" />
+                </TableWrap>
+                <CodeBlock code={`{ "error": "Compare requires at least 2 agents" }`} />
+              </section>
 
-            {/* ── CROO ── */}
-            <section id="croo" style={{ marginBottom: 0 }}>
-              {sectionHead("Ordering Through CROO")}
-              {body(<>VERIS is listed on the CROO Agent Store and fulfills orders automatically. Submit requirements as JSON — same shape as the {inlineCode("requirements")} field above.</>)}
-              <CodeBlock code={`{
+              {/* CROO */}
+              <section id="croo" style={{ marginBottom: 0 }}>
+                <SectionTitle>Ordering Through CROO</SectionTitle>
+                <Body>VERIS is listed on the CROO Agent Store and fulfills orders automatically. Submit requirements as JSON — same shape as the <IC text="requirements" /> field above.</Body>
+                <CodeBlock code={`{
   "type": "project",
   "name": "Uniswap",
   "website": "https://uniswap.org"
 }`} />
-              <p style={{ color: "#8B96A7", fontSize: 13, lineHeight: 1.65, margin: "14px 0 0" }}>
-                Payment, escrow, and on-chain delivery are handled by CROO on Base Mainnet. VERIS
-                delivers the same structured report via {inlineCode("deliverOrder()")}.
-              </p>
-            </section>
+                <p style={{ color: "#8B96A7", fontSize: 13, lineHeight: 1.65, margin: "14px 0 0", wordBreak: "break-word" }}>
+                  Payment, escrow, and on-chain delivery are handled by CROO on Base Mainnet.
+                  VERIS delivers via <IC text="deliverOrder()" />.
+                </p>
+              </section>
 
-          </motion.div>
-        </main>
+            </motion.div>
+          </main>
+        </div>
       </div>
 
       <div style={{
