@@ -10,7 +10,7 @@ import ProjectAuditsPage from "@/pages/ProjectAuditsPage";
 import AgentAuditsPage from "@/pages/AgentAuditsPage";
 import DocsPage from "@/pages/DocsPage";
 import HowVerisWorksPage from "@/pages/HowVerisWorksPage";
-
+import ReceiptsPage from "@/pages/ReceiptsPage";
 const queryClient = new QueryClient();
 
 const DemoPage = () => (
@@ -34,6 +34,7 @@ function Router() {
       <Route path="/how-it-works"   component={HowVerisWorksPage}/>
       <Route path="/docs"           component={DocsPage}         />
       <Route                        component={NotFound}         />
+      <Route path="/receipts"       component={ReceiptsPage} />
     </Switch>
   );
 }
