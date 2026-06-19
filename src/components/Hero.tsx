@@ -131,28 +131,6 @@ export function Hero() {
               Run Audit
             </button>
           </Link>
-          
-          <Link href={ROUTES.receipts} style={{ textDecoration: "none" }}>
-            <button style={{
-              background: "rgba(0,212,255,0.08)", 
-              border: "1px solid rgba(0,212,255,0.2)", 
-              color: "var(--text)",
-              borderRadius: "8px", padding: "14px 32px", cursor: "pointer",
-              transition: "all 0.2s", fontFamily: "inherit", fontSize: 15
-            }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = "rgba(0,212,255,0.15)";
-                e.currentTarget.style.borderColor = "rgba(0,212,255,0.4)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = "rgba(0,212,255,0.08)";
-                e.currentTarget.style.borderColor = "rgba(0,212,255,0.2)";
-              }}
-            >
-              View Receipts
-            </button>
-          </Link>
-          
           <Link href={ROUTES.demo} style={{ textDecoration: "none" }}>
             <button style={{
               background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "var(--text)",
