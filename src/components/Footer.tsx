@@ -1,6 +1,3 @@
-import { Link } from "wouter";
-import { ROUTES } from "@/data/navigation";
-
 export function Footer() {
   return (
     <footer style={{
@@ -25,58 +22,9 @@ export function Footer() {
           <span style={{ fontWeight: 700, fontSize: 16, color: "#F5F7FA" }}>VERIS</span>
         </div>
 
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 20,
-          flexWrap: "wrap",
-          justifyContent: "center"
-        }}>
-          <Link href={ROUTES.docs} style={{
-            fontSize: 13,
-            color: "#8B96A7",
-            textDecoration: "none",
-            transition: "color 0.2s"
-          }}
-            onMouseOver={(e) => e.currentTarget.style.color = "#F5F7FA"}
-            onMouseOut={(e) => e.currentTarget.style.color = "#8B96A7"}
-          >
-            Docs
-          </Link>
-          <Link href={ROUTES.audit} style={{
-            fontSize: 13,
-            color: "#8B96A7",
-            textDecoration: "none",
-            transition: "color 0.2s"
-          }}
-            onMouseOver={(e) => e.currentTarget.style.color = "#F5F7FA"}
-            onMouseOut={(e) => e.currentTarget.style.color = "#8B96A7"}
-          >
-            Audit
-          </Link>
-          <Link href={ROUTES.receipts} style={{
-            fontSize: 13,
-            color: "#8B96A7",
-            textDecoration: "none",
-            transition: "color 0.2s"
-          }}
-            onMouseOver={(e) => e.currentTarget.style.color = "#F5F7FA"}
-            onMouseOut={(e) => e.currentTarget.style.color = "#8B96A7"}
-          >
-            Receipts
-          </Link>
-          <Link href={ROUTES.howItWorks} style={{
-            fontSize: 13,
-            color: "#8B96A7",
-            textDecoration: "none",
-            transition: "color 0.2s"
-          }}
-            onMouseOver={(e) => e.currentTarget.style.color = "#F5F7FA"}
-            onMouseOut={(e) => e.currentTarget.style.color = "#8B96A7"}
-          >
-            How It Works
-          </Link>
-        </div>
+        <span style={{ fontSize: 13, color: "#8B96A7", textAlign: "center" }}>
+          Trust Infrastructure for the Agent Economy.
+        </span>
 
         <span style={{ fontSize: 12, color: "rgba(139,150,167,0.5)" }}>
           © 2026 VERIS. All rights reserved.
