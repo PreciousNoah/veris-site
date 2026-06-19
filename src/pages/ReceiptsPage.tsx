@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Search, Clock, ChevronRight, RotateCcw } from "lucide-react";
 import "@/veris.css";
 
-const BACKEND_URL = "https://veris-agent.YOUR-RAILWAY-URL.up.railway.app";
+const BACKEND_URL = "https://veris-agent.YOUR-RAILWAY-production.up.railway.app";
 
 function VerisMark() {
   return (
