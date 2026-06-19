@@ -33,8 +33,9 @@ function Router() {
       <Route path="/agent-audits"   component={AgentAuditsPage}  />
       <Route path="/how-it-works"   component={HowVerisWorksPage}/>
       <Route path="/docs"           component={DocsPage}         />
-      <Route                        component={NotFound}         />
       <Route path="/receipts"       component={ReceiptsPage} />
+      <Route                        component={NotFound}         />
+   
     </Switch>
   );
 }
