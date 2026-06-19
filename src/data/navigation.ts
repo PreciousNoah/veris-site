@@ -22,6 +22,7 @@ export const ROUTES = {
   agentAudits:   "/agent-audits",
   howItWorks:    "/how-it-works",
   docs:          "/docs",
+  receipts:      "/receipts",        // ← Add this
 } as const;
 
 // ─── Primary navigation (header) ─────────────────────────────────────────────
@@ -30,6 +31,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Agent Audits",   href: ROUTES.agentAudits   },
   { label: "How It Works",   href: ROUTES.howItWorks    },
   { label: "Docs",           href: ROUTES.docs          },
+  { label: "Receipts",       href: ROUTES.receipts      }, // ← Add this
 ];
 
 // ─── Footer navigation ────────────────────────────────────────────────────────
@@ -52,6 +54,7 @@ export const FOOTER_NAV: FooterSection[] = [
       { label: "API Access",       href: ROUTES.docs          },
       { label: "Audit Reports",    href: ROUTES.audit         },
       { label: "Knowledge Base",   href: ROUTES.docs          },
+      { label: "Receipts",         href: ROUTES.receipts      }, // ← Add this
     ],
   },
   {
