@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { Search, Clock, ChevronRight, RotateCcw, ArrowLeft } from "lucide-react";
-import { TrustDetailView } from "@/components/TrustDetailView";
+import { ArrowLeft, Search, Clock, ChevronRight, RotateCcw } from "lucide-react";
 import "@/veris.css";
 
 const BACKEND_URL = "https://veris-agent-production.up.railway.app";
@@ -25,7 +24,6 @@ type Receipt = {
   signals_verified: number;
   signals_total: number;
   created_at: string;
-  report?: string;
 };
 
 function scoreColor(score: number | null) {
@@ -33,6 +31,15 @@ function scoreColor(score: number | null) {
   if (score >= 70) return "#10B981";
   if (score >= 45) return "#FBB92D";
   return "#EF4444";
+}
+
+function scoreBadgeStyle(score: number | null) {
+  const c = scoreColor(score);
+  return {
+    background: `${c}14`,
+    border: `1px solid ${c}33`,
+    color: c,
+  };
 }
 
 function timeAgo(iso: string) {
@@ -46,21 +53,22 @@ function timeAgo(iso: string) {
   return `${days}d ago`;
 }
 
-function ReceiptCard({ receipt, selected, onClick }: { receipt: Receipt; selected: boolean; onClick: () => void }) {
-  const c = scoreColor(receipt.score);
+function ReceiptCard({ receipt, onClick }: { receipt: Receipt; onClick: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
       style={{
-        background: selected ? "rgba(0,212,255,0.04)" : "rgba(17,20,26,0.7)",
-        border: `1px solid ${selected ? "rgba(0,212,255,0.3)" : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 12, padding: "16px 18px",
-        cursor: "pointer", transition: "border-color 0.2s, background 0.2s",
+        background: "rgba(17,20,26,0.7)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 12, padding: "18px 20px",
+        cursor: "pointer", transition: "border-color 0.2s",
         display: "flex", alignItems: "center",
         justifyContent: "space-between", gap: 12,
       }}
+      onMouseOver={(e) => (e.currentTarget.style.borderColor = "rgba(0,212,255,0.25)")}
+      onMouseOut={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
     >
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
@@ -86,14 +94,83 @@ function ReceiptCard({ receipt, selected, onClick }: { receipt: Receipt; selecte
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
         <div style={{
-          background: `${c}14`, border: `1px solid ${c}33`, color: c,
-          borderRadius: 8, padding: "6px 12px", fontSize: 13, fontWeight: 700,
+          ...scoreBadgeStyle(receipt.score),
+          borderRadius: 8, padding: "6px 12px",
+          fontSize: 13, fontWeight: 700,
         }}>
           {receipt.score !== null ? `${receipt.score}/100` : "N/A"}
         </div>
-        <ChevronRight size={14} color="#8B96A7" style={{
-          transform: selected ? "rotate(90deg)" : "none", transition: "transform 0.2s",
-        }} />
+        <ChevronRight size={14} color="#8B96A7" />
+      </div>
+    </motion.div>
+  );
+}
+
+function ReceiptDetail({ receipt, onClose }: { receipt: Receipt; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      style={{
+        background: "rgba(17,20,26,0.9)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 16, padding: 24,
+        marginBottom: 20,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <p style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", margin: "0 0 4px" }}>
+            Trust Receipt
+          </p>
+          <h3 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{receipt.entity_name}</h3>
+        </div>
+        <button onClick={onClose} style={{
+          background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 6, padding: "6px 12px", color: "#8B96A7", fontSize: 12,
+          cursor: "pointer", fontFamily: "inherit",
+        }}>
+          Close
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "Trust Score", value: receipt.score !== null ? `${receipt.score}/100` : "N/A", color: scoreColor(receipt.score) },
+          { label: "Verdict", value: receipt.risk_level || "—", color: "#F5F7FA" },
+          { label: "Signals", value: `${receipt.signals_verified}/${receipt.signals_total}`, color: "#00D4FF" },
+          { label: "Type", value: receipt.entity_type, color: "#8B96A7" },
+        ].map((item) => (
+          <div key={item.label} style={{
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 10, padding: "14px 16px",
+          }}>
+            <p style={{ fontSize: 11, color: "#8B96A7", margin: "0 0 4px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {item.label}
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: item.color, margin: 0, wordBreak: "break-word" }}>
+              {item.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8B96A7", fontSize: 12, marginBottom: 20 }}>
+        <Clock size={12} />
+        Audited {new Date(receipt.created_at).toLocaleString()}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <Link href="/audit">
+          <button style={{
+            background: "#00D4FF", color: "#08090D", border: "none",
+            borderRadius: 7, padding: "9px 18px", fontSize: 13, fontWeight: 600,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>
+            Re-audit this entity →
+          </button>
+        </Link>
       </div>
     </motion.div>
   );
@@ -111,6 +188,7 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load global feed on mount
   useEffect(() => {
     loadFeed();
   }, []);
@@ -160,10 +238,6 @@ export default function ReceiptsPage() {
     setEntityReceipts([]);
     setSearchQuery("");
     setError(null);
-  };
-
-  const handleCardClick = (receipt: Receipt) => {
-    setSelectedReceipt(selectedReceipt?.id === receipt.id ? null : receipt);
   };
 
   const activeReceipts = pageState === "entity" ? entityReceipts : feed;
@@ -257,6 +331,13 @@ export default function ReceiptsPage() {
             </div>
           )}
 
+          {/* Selected receipt detail */}
+          <AnimatePresence>
+            {selectedReceipt && (
+              <ReceiptDetail receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />
+            )}
+          </AnimatePresence>
+
           {/* Feed header */}
           {pageState === "feed" && !loading && feed.length > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -328,38 +409,15 @@ export default function ReceiptsPage() {
             </div>
           )}
 
-          {/* Receipt list with inline expanding detail */}
+          {/* Receipt list */}
           {!loading && !error && activeReceipts.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {activeReceipts.map((receipt) => (
-                <div key={receipt.id}>
-                  <ReceiptCard
-                    receipt={receipt}
-                    selected={selectedReceipt?.id === receipt.id}
-                    onClick={() => handleCardClick(receipt)}
-                  />
-                  <AnimatePresence>
-                    {selectedReceipt?.id === receipt.id && (
-                      <div style={{ marginTop: 10 }}>
-                        {receipt.report ? (
-                          <TrustDetailView receipt={receipt} report={receipt.report} />
-                        ) : (
-                          <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            style={{
-                              background: "rgba(17,20,26,0.7)", border: "1px solid rgba(255,255,255,0.08)",
-                              borderRadius: 12, padding: 20, textAlign: "center",
-                            }}
-                          >
-                            <p style={{ color: "#8B96A7", fontSize: 13, margin: 0 }}>
-                              Full report unavailable for this receipt.
-                            </p>
-                          </motion.div>
-                        )}
-                      </div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              {activeReceipts.map((receipt, i) => (
+                <ReceiptCard
+                  key={receipt.id}
+                  receipt={receipt}
+                  onClick={() => setSelectedReceipt(selectedReceipt?.id === receipt.id ? null : receipt)}
+                />
               ))}
             </div>
           )}
@@ -374,4 +432,4 @@ export default function ReceiptsPage() {
       }} />
     </div>
   );
-} 
+}
