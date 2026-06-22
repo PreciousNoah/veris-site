@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "wouter";
+import { motion } from "framer-motion";
+import { Link, useLocation } from "wouter";
 import { ArrowLeft, Search, Clock, ChevronRight, RotateCcw } from "lucide-react";
 import "@/veris.css";
 
@@ -106,85 +106,15 @@ function ReceiptCard({ receipt, onClick }: { receipt: Receipt; onClick: () => vo
   );
 }
 
-function ReceiptDetail({ receipt, onClose }: { receipt: Receipt; onClose: () => void }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
-      style={{
-        background: "rgba(17,20,26,0.9)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 16, padding: 24,
-        marginBottom: 20,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
-        <div>
-          <p style={{ fontSize: 11, letterSpacing: "0.15em", color: "#8B96A7", textTransform: "uppercase", margin: "0 0 4px" }}>
-            Trust Receipt
-          </p>
-          <h3 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{receipt.entity_name}</h3>
-        </div>
-        <button onClick={onClose} style={{
-          background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 6, padding: "6px 12px", color: "#8B96A7", fontSize: 12,
-          cursor: "pointer", fontFamily: "inherit",
-        }}>
-          Close
-        </button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 20 }}>
-        {[
-          { label: "Trust Score", value: receipt.score !== null ? `${receipt.score}/100` : "N/A", color: scoreColor(receipt.score) },
-          { label: "Verdict", value: receipt.risk_level || "—", color: "#F5F7FA" },
-          { label: "Signals", value: `${receipt.signals_verified}/${receipt.signals_total}`, color: "#00D4FF" },
-          { label: "Type", value: receipt.entity_type, color: "#8B96A7" },
-        ].map((item) => (
-          <div key={item.label} style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: 10, padding: "14px 16px",
-          }}>
-            <p style={{ fontSize: 11, color: "#8B96A7", margin: "0 0 4px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              {item.label}
-            </p>
-            <p style={{ fontSize: 15, fontWeight: 600, color: item.color, margin: 0, wordBreak: "break-word" }}>
-              {item.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8B96A7", fontSize: 12, marginBottom: 20 }}>
-        <Clock size={12} />
-        Audited {new Date(receipt.created_at).toLocaleString()}
-      </div>
-
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <Link href="/audit">
-          <button style={{
-            background: "#00D4FF", color: "#08090D", border: "none",
-            borderRadius: 7, padding: "9px 18px", fontSize: 13, fontWeight: 600,
-            cursor: "pointer", fontFamily: "inherit",
-          }}>
-            Re-audit this entity →
-          </button>
-        </Link>
-      </div>
-    </motion.div>
-  );
-}
-
 type PageState = "feed" | "entity";
 
 export default function ReceiptsPage() {
+  const [, navigate] = useLocation();
   const [pageState, setPageState] = useState<PageState>("feed");
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [feed, setFeed] = useState<Receipt[]>([]);
   const [entityReceipts, setEntityReceipts] = useState<Receipt[]>([]);
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -212,7 +142,6 @@ export default function ReceiptsPage() {
     if (!query.trim()) return;
     setLoading(true);
     setError(null);
-    setSelectedReceipt(null);
     setPageState("entity");
     setSearchQuery(query.trim());
     try {
@@ -234,10 +163,14 @@ export default function ReceiptsPage() {
 
   const handleBack = () => {
     setPageState("feed");
-    setSelectedReceipt(null);
     setEntityReceipts([]);
     setSearchQuery("");
     setError(null);
+  };
+
+  const handleCardClick = (receipt: Receipt) => {
+    const entityId = receipt.entity_name.toLowerCase().trim();
+    navigate(`/receipts/${encodeURIComponent(entityId)}`);
   };
 
   const activeReceipts = pageState === "entity" ? entityReceipts : feed;
@@ -331,13 +264,6 @@ export default function ReceiptsPage() {
             </div>
           )}
 
-          {/* Selected receipt detail */}
-          <AnimatePresence>
-            {selectedReceipt && (
-              <ReceiptDetail receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />
-            )}
-          </AnimatePresence>
-
           {/* Feed header */}
           {pageState === "feed" && !loading && feed.length > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -412,11 +338,11 @@ export default function ReceiptsPage() {
           {/* Receipt list */}
           {!loading && !error && activeReceipts.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {activeReceipts.map((receipt, i) => (
+              {activeReceipts.map((receipt) => (
                 <ReceiptCard
                   key={receipt.id}
                   receipt={receipt}
-                  onClick={() => setSelectedReceipt(selectedReceipt?.id === receipt.id ? null : receipt)}
+                  onClick={() => handleCardClick(receipt)}
                 />
               ))}
             </div>
