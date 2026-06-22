@@ -129,8 +129,10 @@ export default function ReceiptsPage() {
     try {
       const res = await fetch(`${BACKEND_URL}/receipts`);
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
-      const data = await res.json();
-      setFeed(data.receipts || []);
+      const text = await res.text(); // read as text first
+      const data = JSON.parse(text);  // then parse
+      const receipts = Array.isArray(data.receipts) ? data.receipts : [];
+      setFeed(receipts);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load receipts");
     } finally {
@@ -145,7 +147,7 @@ export default function ReceiptsPage() {
     setPageState("entity");
     setSearchQuery(query.trim());
     try {
-      const entityId = query.trim().toLowerCase().replace(/\s+/g, "-");
+      const entityId = query.trim().toLowerCase(); // NOT .replace(/\s+/g, "-")
       const res = await fetch(`${BACKEND_URL}/receipts/${encodeURIComponent(entityId)}`);
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const data = await res.json();
