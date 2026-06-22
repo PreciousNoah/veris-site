@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useParams } from "wouter";
 import { ArrowLeft, ExternalLink, Clock } from "lucide-react";
+import { ScoreTimeline } from "@/components/ScoreTimeline";
 import "@/veris.css";
 
 const BACKEND_URL = "https://veris-agent-production.up.railway.app";
@@ -153,7 +154,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const tierColor = (tier: number) => (tier === 1 ? "#5EEAD4" : tier === 2 ? "#00D4FF" : tier === 3 ? "#FBB92D" : "#8B96A7");
 
 // ─────────────────────────────────────────────────────────────────────
-// MAIN PAGE
+// TYPES
 // ─────────────────────────────────────────────────────────────────────
 
 type Receipt = {
@@ -162,13 +163,28 @@ type Receipt = {
   entity_name: string;
   score: number | null;
   risk_level: string;
+  signals_verified?: number;
+  signals_total?: number;
   created_at: string;
   report?: string;
 };
 
+type HistoryPoint = {
+  id: string;
+  score: number | null;
+  risk_level: string;
+  created_at: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────
+// MAIN PAGE
+// ─────────────────────────────────────────────────────────────────────
+
 export default function ReceiptDetailPage() {
   const params = useParams<{ entityId: string }>();
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [currentId, setCurrentId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -184,15 +200,48 @@ export default function ReceiptDetailPage() {
       const res = await fetch(`${BACKEND_URL}/receipts/${encodeURIComponent(entityId)}`);
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const data = await res.json();
-      const latest = data.receipts?.[0];
-      if (!latest) throw new Error("No receipt found for this entity");
-      setReceipt(latest);
+      const all: Receipt[] = data.receipts || [];
+      if (all.length === 0) throw new Error("No receipt found for this entity");
+
+      // Sort newest first
+      const sorted = [...all].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setHistory(sorted.map((r) => ({
+        id: r.id,
+        score: r.score,
+        risk_level: r.risk_level,
+        created_at: r.created_at,
+      })));
+      setReceipt(sorted[0]);          // latest as default view
+      setCurrentId(sorted[0].id);     // track selected
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load receipt");
     } finally {
       setLoading(false);
     }
   }
+
+  const handleHistorySelect = (id: string) => {
+    const selected = history.find((h) => h.id === id);
+    if (!selected) return;
+    // We need to re-fetch or look up the full receipt with report
+    // Since we already have all receipts from the API response, we need to store them
+    // For now, if the selected receipt has a report, parse it; otherwise keep current
+    const fullReceipt = (history as any[]).find((r: any) => r.id === id);
+    if (fullReceipt?.report) {
+      setReceipt(fullReceipt as Receipt);
+    } else {
+      // Re-fetch single receipt to get the report
+      fetch(`${BACKEND_URL}/receipts/${encodeURIComponent(params.entityId!)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          const found = (data.receipts || []).find((r: Receipt) => r.id === id);
+          if (found) setReceipt(found);
+        })
+        .catch(() => {}); // silent — just keep current receipt
+    }
+    setCurrentId(id);
+  };
 
   const d = receipt?.report ? parseReport(receipt.report) : null;
 
@@ -278,6 +327,15 @@ export default function ReceiptDetailPage() {
                 </span>
               </div>
             </div>
+
+            {/* Score Timeline */}
+            {history.length > 1 && (
+              <ScoreTimeline
+                history={history}
+                currentId={currentId}
+                onSelect={handleHistorySelect}
+              />
+            )}
 
             {/* Hard event banner */}
             {d.hasHardEvent && (
