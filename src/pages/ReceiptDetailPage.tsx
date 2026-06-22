@@ -4,7 +4,7 @@ import { Link, useParams } from "wouter";
 import { ArrowLeft, ExternalLink, Clock } from "lucide-react";
 import "@/veris.css";
 
-const BACKEND_URL = "https://veris-agent.YOUR-RAILWAY-URL.up.railway.app";
+const BACKEND_URL = "https://veris-agent-production.up.railway.app";
 
 function VerisMark() {
   return (
