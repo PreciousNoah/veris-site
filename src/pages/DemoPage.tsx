@@ -18,15 +18,6 @@ const WORKFLOW = [
   { agent: "SENTINEL", color: "#A8EDEA", role: "Compliance Decision", desc: "Receives trust score and ZERU signals. Issues a final compliance verdict with recommended actions and review period." },
 ];
 
-const TIMESTAMPS = [
-  { time: "0:00", label: "Introduction — the trust gap in the agent economy" },
-  { time: "0:45", label: "Live project audit — Aave submitted through CROO" },
-  { time: "1:30", label: "A2A workflow — VERIS calls ZERU for market research" },
-  { time: "2:15", label: "SENTINEL compliance decision and recommended actions" },
-  { time: "3:00", label: "Trust receipts — score history across multiple audits" },
-  { time: "3:40", label: "On-chain delivery — verified Base Mainnet transactions" },
-];
-
 export default function DemoPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#08090D", color: "#F5F7FA", fontFamily: "Inter, sans-serif", overflowX: "hidden" }}>
@@ -70,7 +61,7 @@ export default function DemoPage() {
             borderRadius: 16, overflow: "hidden",
             border: "1px solid rgba(255,255,255,0.08)",
             boxShadow: "0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,255,0.04)",
-            marginBottom: 16,
+            marginBottom: 48,
             background: "#11141A",
           }}>
             <iframe
@@ -84,30 +75,6 @@ export default function DemoPage() {
                 border: "none",
               }}
             />
-          </div>
-
-          {/* Timestamps */}
-          <div style={{
-            background: "rgba(17,20,26,0.7)", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 12, padding: "20px 20px", marginBottom: 48,
-          }}>
-            <p style={{ fontSize: 11, letterSpacing: "0.12em", color: "#8B96A7", textTransform: "uppercase", margin: "0 0 14px" }}>
-              What's in the demo
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {TIMESTAMPS.map((t) => (
-                <div key={t.time} style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-                  <span style={{
-                    fontSize: 11, fontFamily: "monospace", color: "#00D4FF",
-                    background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.2)",
-                    borderRadius: 5, padding: "2px 8px", flexShrink: 0, marginTop: 1,
-                  }}>
-                    {t.time}
-                  </span>
-                  <span style={{ fontSize: 13.5, color: "#8B96A7", lineHeight: 1.5 }}>{t.label}</span>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Three-agent system */}
@@ -235,4 +202,4 @@ export default function DemoPage() {
       }} />
     </div>
   );
-}
+} 
