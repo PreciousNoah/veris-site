@@ -12,25 +12,16 @@ import DocsPage from "@/pages/DocsPage";
 import HowVerisWorksPage from "@/pages/HowVerisWorksPage";
 import ReceiptsPage from "@/pages/ReceiptsPage";
 import ReceiptDetailPage from "@/pages/ReceiptDetailPage";
-import DemoPage from "@/pages/DemoPage";
-const queryClient = new QueryClient();
+import DemoPage from "@/pages/DemoPage"; // This is your actual DemoPage component
 
-const DemoPage = () => (
-  <PlaceholderPage
-    title="Watch the Demo"
-    subtitle="Product Demo"
-    description="A full walkthrough of a live VERIS audit — from submitting an entity to reading the structured trust report. The demo video will be embedded here."
-    ctaLabel="Run an audit instead"
-    ctaHref="/audit"
-  />
-);
+const queryClient = new QueryClient();
 
 function Router() {
   return (
     <Switch>
       <Route path="/"               component={LandingPage}      />
       <Route path="/audit"          component={AuditPage}        />
-      <Route path="/demo"           component={DemoPage}         />
+      <Route path="/demo"           component={DemoPage}         /> {/* Now uses your real DemoPage */}
       <Route path="/project-audits" component={ProjectAuditsPage}/>
       <Route path="/agent-audits"   component={AgentAuditsPage}  />
       <Route path="/how-it-works"   component={HowVerisWorksPage}/>
@@ -38,7 +29,6 @@ function Router() {
       <Route path="/receipts/:entityId" component={ReceiptDetailPage} />
       <Route path="/receipts"       component={ReceiptsPage} />
       <Route                        component={NotFound}         />
-   
     </Switch>
   );
 }
