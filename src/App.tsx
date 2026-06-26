@@ -12,6 +12,7 @@ import DocsPage from "@/pages/DocsPage";
 import HowVerisWorksPage from "@/pages/HowVerisWorksPage";
 import ReceiptsPage from "@/pages/ReceiptsPage";
 import ReceiptDetailPage from "@/pages/ReceiptDetailPage";
+import DemoPage from "@/pages/DemoPage";
 const queryClient = new QueryClient();
 
 const DemoPage = () => (
