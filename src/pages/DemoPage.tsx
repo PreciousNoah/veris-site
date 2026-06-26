@@ -187,7 +187,7 @@ export default function DemoPage() {
               onMouseOver={(e) => { e.currentTarget.style.borderColor = "rgba(0,212,255,0.3)"; e.currentTarget.style.color = "#00D4FF"; }}
               onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#8B96A7"; }}
               >
-                View source
+                View GitHub
               </button>
             </a>
           </div>
