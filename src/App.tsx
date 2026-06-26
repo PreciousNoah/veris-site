@@ -12,7 +12,7 @@ import DocsPage from "@/pages/DocsPage";
 import HowVerisWorksPage from "@/pages/HowVerisWorksPage";
 import ReceiptsPage from "@/pages/ReceiptsPage";
 import ReceiptDetailPage from "@/pages/ReceiptDetailPage";
-import DemoPage from "@/pages/DemoPage"; // This is your actual DemoPage component
+import DemoPage from "@/pages/DemoPage";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +21,7 @@ function Router() {
     <Switch>
       <Route path="/"               component={LandingPage}      />
       <Route path="/audit"          component={AuditPage}        />
-      <Route path="/demo"           component={DemoPage}         /> {/* Now uses your real DemoPage */}
+      <Route path="/demo"           component={DemoPage}         />
       <Route path="/project-audits" component={ProjectAuditsPage}/>
       <Route path="/agent-audits"   component={AgentAuditsPage}  />
       <Route path="/how-it-works"   component={HowVerisWorksPage}/>
