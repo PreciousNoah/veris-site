@@ -34,10 +34,10 @@ export interface StatItem {
 }
 
 export const PLATFORM_STATS: StatItem[] = [
-  { value: 2,   suffix: "",   label: "Live Agents on Base Mainnet"        },
-  { value: 4,   suffix: "",   label: "Verified On-Chain Transactions"     },
+  { value: 3,   suffix: "",   label: "Live Agents on Base Mainnet"        },
+  { value: 30,  suffix: "+",  label: "Verified On-Chain Transactions"     },
   { value: 27,  suffix: "",   label: "Trust Signals Evaluated Per Audit"  },
-  { value: 3,   suffix: "",   label: "Verification Layers Per Report"    },
+  { value: 3,   suffix: "",   label: "Verification Layers Per Report"     },
 ];
 
 // ─── Methodology steps ────────────────────────────────────────────────────────
