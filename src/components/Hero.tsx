@@ -244,23 +244,24 @@ export function Hero() {
             Verify Web3 projects and AI agents through autonomous multi-agent due diligence — delivered on Base Mainnet.
           </motion.p>
 
-          {/* Social proof pills */}
+          {/* Social proof — single clean line */}
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.28 }}
-            style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, margin: "28px 0" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: "6px 0", margin: "28px 0" }}
           >
             {[
-              "✅ Live on CROO Agent Store",
-              "✅ 3 autonomous agents",
-              "✅ Base Mainnet",
-              "✅ Real A2A workflow",
-            ].map((item) => (
-              <span key={item} style={{
-                fontSize: 12, color: "rgba(245,247,250,0.6)",
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 20, padding: "5px 12px", whiteSpace: "nowrap",
-              }}>
-                {item}
+              "3 autonomous agents",
+              "Base Mainnet",
+              "30+ on-chain transactions",
+              "Real A2A workflow",
+            ].map((item, i, arr) => (
+              <span key={item} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 12.5, color: "rgba(245,247,250,0.55)", whiteSpace: "nowrap" }}>
+                  <span style={{ color: "#10B981", marginRight: 4 }}>✓</span>{item}
+                </span>
+                {i < arr.length - 1 && (
+                  <span style={{ color: "rgba(255,255,255,0.15)", margin: "0 8px", fontSize: 12 }}>·</span>
+                )}
               </span>
             ))}
           </motion.div>
@@ -270,30 +271,51 @@ export function Hero() {
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.35 }}
             className="veris-hero-cta"
           >
+            {/* Primary — solid cyan, high contrast */}
             <Link href={ROUTES.audit} style={{ textDecoration: "none" }}>
               <button style={{
-                background: "var(--primary)", color: "var(--bg)", border: "none",
-                borderRadius: "8px", padding: "14px 32px", fontWeight: 600, cursor: "pointer",
-                transition: "all 0.2s", fontFamily: "inherit", fontSize: 15
+                background: "#00D4FF",
+                color: "#08090D",
+                border: "none",
+                borderRadius: "10px",
+                padding: "16px 36px",
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontSize: 15,
+                letterSpacing: "0.01em",
+                boxShadow: "0 0 32px rgba(0,212,255,0.35)",
+                transition: "all 0.2s",
               }}
-                onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 0 24px rgba(0,212,255,0.5)"}
-                onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}
+                onMouseOver={(e) => { e.currentTarget.style.boxShadow = "0 0 48px rgba(0,212,255,0.55)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseOut={(e) => { e.currentTarget.style.boxShadow = "0 0 32px rgba(0,212,255,0.35)"; e.currentTarget.style.transform = "none"; }}
               >
                 Run Live Audit
               </button>
             </Link>
+
+            {/* Secondary — white border, white text, clearly visible */}
             <Link href={ROUTES.demo} style={{ textDecoration: "none" }}>
               <button style={{
-                background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "var(--text)",
-                borderRadius: "8px", padding: "14px 32px", cursor: "pointer",
-                transition: "all 0.2s", fontFamily: "inherit", fontSize: 15
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.35)",
+                color: "#F5F7FA",
+                borderRadius: "10px",
+                padding: "16px 36px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontSize: 15,
+                fontWeight: 600,
+                transition: "all 0.2s",
               }}
-                onMouseOver={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)"}
-                onMouseOut={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"}
+                onMouseOver={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)"; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)"; }}
               >
                 Watch Demo
               </button>
             </Link>
+
+            {/* Tertiary — GitHub, subdued */}
             <a
               href="https://github.com/PreciousNoah/veris-agent"
               target="_blank"
@@ -301,15 +323,21 @@ export function Hero() {
               style={{ textDecoration: "none" }}
             >
               <button style={{
-                background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(245,247,250,0.6)",
-                borderRadius: "8px", padding: "14px 28px", cursor: "pointer",
-                transition: "all 0.2s", fontFamily: "inherit", fontSize: 15,
-                display: "flex", alignItems: "center", gap: 7,
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.18)",
+                color: "rgba(245,247,250,0.65)",
+                borderRadius: "10px",
+                padding: "16px 28px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontSize: 15,
+                transition: "all 0.2s",
+                display: "flex", alignItems: "center", gap: 8,
               }}
-                onMouseOver={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; e.currentTarget.style.color = "#F5F7FA"; }}
-                onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "rgba(245,247,250,0.6)"; }}
+                onMouseOver={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; e.currentTarget.style.color = "#F5F7FA"; }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.color = "rgba(245,247,250,0.65)"; }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
                 </svg>
                 View GitHub
@@ -321,4 +349,4 @@ export function Hero() {
       </div>
     </>
   );
-}
+} 
