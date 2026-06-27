@@ -1,6 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // NAVIGATION — routes and link labels
-// Update href values here when real pages are ready.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface NavLink {
@@ -22,7 +21,7 @@ export const ROUTES = {
   agentAudits:   "/agent-audits",
   howItWorks:    "/how-it-works",
   docs:          "/docs",
-  receipts:      "/receipts",        // ← Add this
+  receipts:      "/receipts",
 } as const;
 
 // ─── Primary navigation (header) ─────────────────────────────────────────────
@@ -31,40 +30,39 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Agent Audits",   href: ROUTES.agentAudits   },
   { label: "How It Works",   href: ROUTES.howItWorks    },
   { label: "Docs",           href: ROUTES.docs          },
-  { label: "Receipts",       href: ROUTES.receipts      }, // ← Add this
+  { label: "Receipts",       href: ROUTES.receipts      },
 ];
 
 // ─── Footer navigation ────────────────────────────────────────────────────────
 export const FOOTER_NAV: FooterSection[] = [
   {
-    title: "PLATFORM",
+    title: "PRODUCT",
     links: [
-      { label: "Project Audits",   href: ROUTES.projectAudits },
-      { label: "Agent Audits",     href: ROUTES.agentAudits   },
-      { label: "Trust Engine",     href: ROUTES.howItWorks    },
-      { label: "Trust Scores",     href: ROUTES.audit         },
-      { label: "Monitoring",       href: ROUTES.audit         },
+      { label: "Project Audits",  href: ROUTES.projectAudits },
+      { label: "Agent Audits",    href: ROUTES.agentAudits   },
+      { label: "How It Works",    href: ROUTES.howItWorks    },
+      { label: "Audit Receipts",  href: ROUTES.receipts      },
+      { label: "Watch Demo",      href: ROUTES.demo          },
     ],
   },
   {
     title: "RESOURCES",
     links: [
-      { label: "Documentation",    href: ROUTES.docs          },
-      { label: "Methodology",      href: ROUTES.howItWorks    },
-      { label: "API Access",       href: ROUTES.docs          },
-      { label: "Audit Reports",    href: ROUTES.audit         },
-      { label: "Knowledge Base",   href: ROUTES.docs          },
-      { label: "Receipts",         href: ROUTES.receipts      }, // ← Add this
+      { label: "Documentation",   href: ROUTES.docs          },
+      { label: "API Reference",   href: ROUTES.docs          },
+      { label: "Methodology",     href: ROUTES.howItWorks    },
+      { label: "Run an Audit",    href: ROUTES.audit         },
+      { label: "GitHub",          href: "https://github.com/PreciousNoah/veris-agent" },
     ],
   },
   {
-    title: "COMPANY",
+    title: "BUILT ON",
     links: [
-      { label: "About",            href: "#" },
-      { label: "Contact",          href: "#" },
-      { label: "Careers",          href: "#" },
-      { label: "Partners",         href: "#" },
-      { label: "Security",         href: "#" },
+      { label: "CROO Protocol",   href: "https://agent.croo.network"              },
+      { label: "Base Mainnet",    href: "https://base.org"                        },
+      { label: "ZERU Agent",      href: "https://agent.croo.network"              },
+      { label: "SENTINEL Agent",  href: "https://agent.croo.network"              },
+      { label: "View on BaseScan", href: "https://basescan.org"                  },
     ],
   },
 ];
