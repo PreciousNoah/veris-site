@@ -5,7 +5,7 @@ import { ArrowLeft, ExternalLink, Clock } from "lucide-react";
 import { ScoreTimeline } from "@/components/ScoreTimeline";
 import "@/veris.css";
 
-const BACKEND_URL = "https://veris-agent-production.up.railway.app";
+const BACKEND_URL = "https://veris-agent.onrender.com";
 
 function VerisMark() {
   return (
