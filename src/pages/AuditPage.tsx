@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { ArrowLeft, Globe, Bot, XCircle } from "lucide-react";
 import "@/veris.css";
 
-const BACKEND_URL = "https://veris-agent-production.up.railway.app";
+const BACKEND_URL = "https://veris-agent.onrender.com";
 
 const ENTITY_TYPES = [
   { id: "project", label: "Web3 / DeFi Project", Icon: Globe },
